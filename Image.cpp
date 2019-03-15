@@ -13,6 +13,7 @@ namespace Vkx
 //! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  info                Creation info
 //! @param  memoryProperties    Memory properties
+//! @param  aspect
 //!
 //! @warning       A std::runtime_error is thrown if the image cannot be created and allocated
 //! @todo       "... you're not supposed to actually call vkAllocateMemory for every individual image. ... The right way to
@@ -77,11 +78,12 @@ Image & Image::operator =(Image && rhs)
     return *this;
 }
 
-//! @param  device
-//! @param  physicalDevice
-//! @param  info
-//! @param  size
-//! @param  src
+//! @param  device              Logical device associated with the image
+//! @param  physicalDevice      Physical device associated with the image's allocation
+//! @param  info                Creation info
+//! @param  src                 Image data
+//! @param  size                Size of image data
+//! @param  aspect              Image aspect
 HostImage::HostImage(vk::Device const &          device,
                      vk::PhysicalDevice const &  physicalDevice,
                      vk::ImageCreateInfo const & info,
@@ -98,10 +100,10 @@ HostImage::HostImage(vk::Device const &          device,
         set(device, src, 0, size);
 }
 
-//! @param  device
-//! @param  src
-//! @param  offset
-//! @param  size
+//! @param  device      Logical device associated with the image
+//! @param  src         Source data
+//! @param  offset      Offset to the start of the image in the source data
+//! @param  size        Size of image data
 void HostImage::set(vk::Device const & device, void const * src, size_t offset, size_t size)
 {
     char * data = (char *)device.mapMemory(allocation(), 0, size, vk::MemoryMapFlags());
@@ -109,9 +111,10 @@ void HostImage::set(vk::Device const & device, void const * src, size_t offset, 
     device.unmapMemory(allocation());
 }
 
-//! @param  device
-//! @param  physicalDevice
-//! @param  info
+//! @param  device              Logical device associated with the image
+//! @param  physicalDevice      Physical device associated with the image's allocation
+//! @param  info                Creation info
+//! @param  aspect              Image aspect
 LocalImage::LocalImage(vk::Device const &         device,
                        vk::PhysicalDevice const & physicalDevice,
                        vk::ImageCreateInfo        info,
@@ -120,13 +123,14 @@ LocalImage::LocalImage(vk::Device const &         device,
 {
 }
 
-//! @param  device
-//! @param  physicalDevice
-//! @param  commandPool
-//! @param  queue
-//! @param  info
-//! @param  src
-//! @param  size
+//! @param  device              Logical device associated with the image
+//! @param  physicalDevice      Physical device associated with the image's allocation
+//! @param  commandPool         Command buffer allocator
+//! @param  queue               Queue used to initialize the image
+//! @param  info                Creation info
+//! @param  src                 Image data
+//! @param  size                Size of image data
+//! @param  aspect              Image aspect
 LocalImage::LocalImage(vk::Device const &         device,
                        vk::PhysicalDevice const & physicalDevice,
                        vk::CommandPool const &    commandPool,
@@ -140,12 +144,12 @@ LocalImage::LocalImage(vk::Device const &         device,
     set(device, physicalDevice, commandPool, queue, src, size);
 }
 
-//! @param  device
-//! @param  physicalDevice
-//! @param  commandPool
-//! @param  queue
-//! @param  src
-//! @param  size
+//! @param  device              Logical device associated with the image
+//! @param  physicalDevice      Physical device associated with the image's allocation
+//! @param  commandPool         Command buffer allocator
+//! @param  queue               Queue used to initialize the image
+//! @param  src                 Image data
+//! @param  size                Size of image data
 void LocalImage::set(vk::Device const &         device,
                      vk::PhysicalDevice const & physicalDevice,
                      vk::CommandPool const &    commandPool,
@@ -183,10 +187,10 @@ void LocalImage::set(vk::Device const &         device,
     }
 }
 
-//! @param  device
-//! @param  commandPool
-//! @param  queue
-//! @param  buffer
+//! @param  device          Logical device associated with the image
+//! @param  commandPool     Command buffer allocator
+//! @param  queue           Queue used to initialize the image
+//! @param  buffer          Image data
 void LocalImage::copy(vk::Device const &      device,
                       vk::CommandPool const & commandPool,
                       vk::Queue const &       queue,
@@ -206,11 +210,11 @@ void LocalImage::copy(vk::Device const &      device,
                        });
 }
 
-//! @param  device
-//! @param  commandPool
-//! @param  queue
-//! @param  oldLayout
-//! @param  newLayout
+//! @param  device          Logical device associated with the image
+//! @param  commandPool     Command buffer allocator
+//! @param  queue           Queue used to initialize the image
+//! @param  oldLayout       Current layout
+//! @param  newLayout       New layout
 void LocalImage::transitionLayout(vk::Device const &      device,
                                   vk::CommandPool const & commandPool,
                                   vk::Queue const &       queue,
@@ -279,12 +283,10 @@ void LocalImage::transitionLayout(vk::Device const &      device,
                        });
 }
 
-//! @param  vk::Device const & device
-//! @param  vk::PhysicalDevice const & physicalDevice
-//! @param  vk::CommandPool const & commandPool
-//! @param  vk::Queue const & queue
-//!
-//! @return void
+//! @param  device              Logical device associated with the image
+//! @param  physicalDevice      Physical device associated with the image's allocation
+//! @param  commandPool         Command buffer allocator
+//! @param  queue               Queue used to initialize the image
 void LocalImage::generateMipmaps(vk::Device const &         device,
                                  vk::PhysicalDevice const & physicalDevice,
                                  vk::CommandPool const &    commandPool,
@@ -377,11 +379,11 @@ void LocalImage::generateMipmaps(vk::Device const &         device,
                        });
 }
 
-//! @param  device
-//! @param  physicalDevice
-//! @param  commandPool
-//! @param  queue
-//! @param  info
+//! @param  device              Logical device associated with the image
+//! @param  physicalDevice      Physical device associated with the image's allocation
+//! @param  commandPool         Command buffer allocator
+//! @param  queue               Queue used to initialize the image
+//! @param  info                Creation info
 DepthImage::DepthImage(vk::Device const &         device,
                        vk::PhysicalDevice const & physicalDevice,
                        vk::CommandPool const &    commandPool,
@@ -396,11 +398,11 @@ DepthImage::DepthImage(vk::Device const &         device,
                      vk::ImageLayout::eDepthStencilAttachmentOptimal);
 }
 
-//! @param  device
-//! @param  physicalDevice
-//! @param  commandPool
-//! @param  queue
-//! @param  info
+//! @param  device              Logical device associated with the image
+//! @param  physicalDevice      Physical device associated with the image's allocation
+//! @param  commandPool         Command buffer allocator
+//! @param  queue               Queue used to initialize the image
+//! @param  info                Creation info
 ResolveImage::ResolveImage(vk::Device const &         device,
                            vk::PhysicalDevice const & physicalDevice,
                            vk::CommandPool const &    commandPool,

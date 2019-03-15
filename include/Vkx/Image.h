@@ -105,17 +105,20 @@ public:
              void const *               src,
              size_t                     size);
 
+    //! Copies data from a buffer into the image
     void copy(vk::Device const &      device,
               vk::CommandPool const & commandPool,
               vk::Queue const &       queue,
               vk::Buffer const &      buffer);
 
+    //! Transitions the image's layout
     void transitionLayout(vk::Device const &      device,
                           vk::CommandPool const & commandPool,
                           vk::Queue const &       queue,
                           vk::ImageLayout         oldLayout,
                           vk::ImageLayout         newLayout);
 
+    //! Generates mipmaps for the image
     void generateMipmaps(vk::Device const &         device,
                          vk::PhysicalDevice const & physicalDevice,
                          vk::CommandPool const &    commandPool,
