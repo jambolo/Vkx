@@ -3,22 +3,25 @@
 #if !defined(VKX_VKX_H)
 #define VKX_VKX_H
 
+#include <functional>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include <functional>
 
 //! Extensions to Vulkan
 namespace Vkx
 {
 class Buffer;
+class Device;
+class PhysicalDevice;
 
 //! Returns true if the extension is supported.
 bool extensionIsSupported(std::vector<vk::ExtensionProperties> & extensions, char const * name);
 
 //! Returns true if all extensions are supported by the device.
-bool allExtensionsSupported(vk::PhysicalDevice const & physicalDevice, std::vector<char const *> const & extensions);
+bool allExtensionsSupported(vk::PhysicalDevice const &        physicalDevice,
+                            std::vector<char const *> const & extensions);
 
 //! Returns true if the layer is available.
 bool layerIsAvailable(std::vector<vk::LayerProperties> layers, char const * name);
@@ -28,14 +31,16 @@ bool allLayersAvailable(std::vector<char const *> const & requested);
 
 //! Loads a shader.
 vk::ShaderModule loadShaderModule(std::string const &         path,
-                                  vk::Device &                device,
+                                  std::shared_ptr<Device>     device,
                                   vk::ShaderModuleCreateFlags flags = vk::ShaderModuleCreateFlags());
 
 //! Finds an appropriate memory type provided by the physical device.
-uint32_t findAppropriateMemoryType(vk::PhysicalDevice const & physicalDevice, uint32_t types, vk::MemoryPropertyFlags properties);
+uint32_t findAppropriateMemoryType(std::shared_ptr<PhysicalDevice> physicalDevice,
+                                   uint32_t                        types,
+                                   vk::MemoryPropertyFlags         properties);
 
 //! Creates and executes a one-time command buffer.
-void executeOnceSynched(vk::Device const &                     device,
+void executeOnceSynched(std::shared_ptr<Device>                device,
                         vk::CommandPool const &                commandPool,
                         vk::Queue const &                      queue,
                         std::function<void(vk::CommandBuffer)> commands);

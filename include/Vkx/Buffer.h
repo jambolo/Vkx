@@ -3,8 +3,12 @@
 #if !defined(VKX_BUFFER_H)
 #define VKX_BUFFER_H
 
+#include <Device.h>
+
 #include <vulkan/vulkan.hpp>
 #include <Vkx/Vkx.h>
+#include <Device.h>
+
 namespace Vkx
 {
 //! An extension of vk::Buffer that supports ownership of the memory.
@@ -17,8 +21,7 @@ public:
     Buffer() = default;
 
     //! Constructor.
-    Buffer(vk::Device const &         device,
-           vk::PhysicalDevice const & physicalDevice,
+    Buffer(std::shared_ptr<Device>    device,
            size_t                     size,
            vk::BufferUsageFlags       usage,
            vk::MemoryPropertyFlags    memoryProperties,
@@ -28,20 +31,25 @@ public:
     Buffer(Buffer && src);
 
     //! Destructor.
-    virtual ~Buffer() = default;
+    virtual ~Buffer()
+    {
+        device_->destroy(buffer_);
+        device_->free(allocation_);
+    }
 
     //! Move-assignment operator
     Buffer & operator =(Buffer && rhs);
 
     //! Implicitly converts into a vk::Buffer.
-    operator vk::Buffer() const { return buffer_.get(); }
+    operator vk::Buffer() const { return buffer_; }
 
     //! Returns the DeviceMemory handle.
-    vk::DeviceMemory allocation() const { return allocation_.get(); }
+    vk::DeviceMemory allocation() const { return allocation_; }
 
 protected:
-    vk::UniqueDeviceMemory allocation_; //!< Buffer allocation
-    vk::UniqueBuffer buffer_;           //!< Vulkan buffer
+    std::shared_ptr<Device> device_;    //!< Device associated with this buffer
+    vk::DeviceMemory allocation_;       //!< %Buffer allocation
+    vk::Buffer buffer_;                 //!< Vulkan buffer
 };
 
 //! A Buffer that is visible to the CPU and is automatically kept in sync (eHostVisible | eHostCoherent).
@@ -52,15 +60,14 @@ public:
     HostBuffer() = default;
 
     //! Constructor.
-    HostBuffer(vk::Device const &         device,
-               vk::PhysicalDevice const & physicalDevice,
+    HostBuffer(std::shared_ptr<Device>    device,
                size_t                     size,
                vk::BufferUsageFlags       usage,
                void const *               src         = nullptr,
                vk::SharingMode            sharingMode = vk::SharingMode::eExclusive);
 
     //! Copies CPU memory into the buffer
-    void set(vk::Device const & device, size_t offset, void const * src, size_t size);
+    void set(size_t offset, void const * src, size_t size);
 };
 
 //! A Buffer that is visible only to the GPU (eDeviceLocal).
@@ -71,15 +78,13 @@ public:
     LocalBuffer() = default;
 
     //! Constructor.
-    LocalBuffer(vk::Device const &         device,
-                vk::PhysicalDevice const & physicalDevice,
+    LocalBuffer(std::shared_ptr<Device>    device,
                 size_t                     size,
                 vk::BufferUsageFlags       usage,
                 vk::SharingMode            sharingMode = vk::SharingMode::eExclusive);
 
     //! Constructor.
-    LocalBuffer(vk::Device const &         device,
-                vk::PhysicalDevice const & physicalDevice,
+    LocalBuffer(std::shared_ptr<Device>    device,
                 vk::CommandPool const &    commandPool,
                 vk::Queue const &          queue,
                 size_t                     size,
@@ -88,17 +93,13 @@ public:
                 vk::SharingMode            sharingMode = vk::SharingMode::eExclusive);
 
     //! Copies data from CPU memory into the buffer
-    void set(vk::Device const &         device,
-             vk::PhysicalDevice const & physicalDevice,
-             vk::CommandPool const &    commandPool,
+    void set(vk::CommandPool const &    commandPool,
              vk::Queue const &          queue,
              void const *               src,
              size_t                     size);
 
 private:
-    void copySynched(vk::Device const &         device,
-                     vk::PhysicalDevice const & physicalDevice,
-                     vk::CommandPool const &    commandPool,
+    void copySynched(vk::CommandPool const &    commandPool,
                      vk::Queue const &          queue,
                      Buffer &                   src,
                      size_t                     size);

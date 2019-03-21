@@ -6,11 +6,11 @@
 #include <vulkan/vulkan.hpp>
 
 #include <array>
+#include <cmath>
 
 namespace Vkx
 {
 //! @param  device              Logical device associated with the image
-//! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  info                Creation info
 //! @param  memoryProperties    Memory properties
 //! @param  aspect
@@ -20,22 +20,22 @@ namespace Vkx
 //!             allocate memory for a large number of objects at the same time is to create a custom allocator that splits up a
 //!             single allocation among many different objects by using the offset parameters that we've seen in many functions."
 
-Image::Image(vk::Device const &          device,
-             vk::PhysicalDevice const &  physicalDevice,
+Image::Image(std::shared_ptr<Device>     device,
              vk::ImageCreateInfo const & info,
              vk::MemoryPropertyFlags     memoryProperties,
              vk::ImageAspectFlags        aspect)
-    : info_(info)
+    : device_(device)
+    , info_(info)
 {
-    image_ = device.createImageUnique(info_);
+    image_ = device->createImage(info_);
 
-    vk::MemoryRequirements requirements = device.getImageMemoryRequirements(image_.get());
-    uint32_t memoryType = findAppropriateMemoryType(physicalDevice, requirements.memoryTypeBits, memoryProperties);
+    vk::MemoryRequirements requirements = device->getImageMemoryRequirements(image_.get());
+    uint32_t memoryType = findAppropriateMemoryType(device->physical(), requirements.memoryTypeBits, memoryProperties);
 
-    allocation_ = device.allocateMemoryUnique(vk::MemoryAllocateInfo(requirements.size, memoryType));
-    device.bindImageMemory(image_.get(), allocation_.get(), 0);
+    allocation_ = device->allocateMemory(vk::MemoryAllocateInfo(requirements.size, memoryType));
+    device->bindImageMemory(image_.get(), allocation_.get(), 0);
 
-    view_ = device.createImageViewUnique(
+    view_ = device->createImageView(
         vk::ImageViewCreateInfo({},
                                 image_.get(),
                                 vk::ImageViewType::e2D,
@@ -84,42 +84,39 @@ Image & Image::operator =(Image && rhs)
 //! @param  src                 Image data
 //! @param  size                Size of image data
 //! @param  aspect              Image aspect
-HostImage::HostImage(vk::Device const &          device,
-                     vk::PhysicalDevice const &  physicalDevice,
+HostImage::HostImage(std::shared_ptr<Device>     device,
                      vk::ImageCreateInfo const & info,
                      void const *                src /*= nullptr*/,
                      size_t                      size /*= 0*/,
                      vk::ImageAspectFlags        aspect /*= vk::ImageAspectFlagBits::eColor*/)
     : Image(device,
-            physicalDevice,
             info,
             vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
             aspect)
 {
     if (src && size > 0)
-        set(device, src, 0, size);
+        set(src, 0, size);
 }
 
 //! @param  device      Logical device associated with the image
 //! @param  src         Source data
 //! @param  offset      Offset to the start of the image in the source data
 //! @param  size        Size of image data
-void HostImage::set(vk::Device const & device, void const * src, size_t offset, size_t size)
+void HostImage::set(void const * src, size_t offset, size_t size)
 {
-    char * data = (char *)device.mapMemory(allocation(), 0, size, vk::MemoryMapFlags());
+    char * data = (char *)device_->mapMemory(allocation(), 0, size, vk::MemoryMapFlags());
     memcpy(data + offset, src, size);
-    device.unmapMemory(allocation());
+    device_->unmapMemory(allocation());
 }
 
 //! @param  device              Logical device associated with the image
 //! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  info                Creation info
 //! @param  aspect              Image aspect
-LocalImage::LocalImage(vk::Device const &         device,
-                       vk::PhysicalDevice const & physicalDevice,
+LocalImage::LocalImage(std::shared_ptr<Device>    device,
                        vk::ImageCreateInfo        info,
                        vk::ImageAspectFlags       aspect /*= vk::ImageAspectFlagBits::eColor*/)
-    : Image(device, physicalDevice, info, vk::MemoryPropertyFlagBits::eDeviceLocal, aspect)
+    : Image(device, info, vk::MemoryPropertyFlagBits::eDeviceLocal, aspect)
 {
 }
 
@@ -131,17 +128,16 @@ LocalImage::LocalImage(vk::Device const &         device,
 //! @param  src                 Image data
 //! @param  size                Size of image data
 //! @param  aspect              Image aspect
-LocalImage::LocalImage(vk::Device const &         device,
-                       vk::PhysicalDevice const & physicalDevice,
+LocalImage::LocalImage(std::shared_ptr<Device>    device,
                        vk::CommandPool const &    commandPool,
                        vk::Queue const &          queue,
                        vk::ImageCreateInfo        info,
                        void const *               src,
                        size_t                     size,
                        vk::ImageAspectFlags       aspect /*= vk::ImageAspectFlagBits::eColor*/)
-    : Image(device, physicalDevice, info, vk::MemoryPropertyFlagBits::eDeviceLocal, aspect)
+    : Image(device, info, vk::MemoryPropertyFlagBits::eDeviceLocal, aspect)
 {
-    set(device, physicalDevice, commandPool, queue, src, size);
+    set(commandPool, queue, src, size);
 }
 
 //! @param  device              Logical device associated with the image
@@ -150,37 +146,32 @@ LocalImage::LocalImage(vk::Device const &         device,
 //! @param  queue               Queue used to initialize the image
 //! @param  src                 Image data
 //! @param  size                Size of image data
-void LocalImage::set(vk::Device const &         device,
-                     vk::PhysicalDevice const & physicalDevice,
-                     vk::CommandPool const &    commandPool,
+void LocalImage::set(vk::CommandPool const &    commandPool,
                      vk::Queue const &          queue,
                      void const *               src,
                      size_t                     size)
 {
     // Transition to transfer dst for copy
-    transitionLayout(device,
-                     commandPool,
+    transitionLayout(commandPool,
                      queue,
                      vk::ImageLayout::eUndefined,
                      vk::ImageLayout::eTransferDstOptimal);
 
     // Copy the data to the image using a staging buffer
-    HostBuffer staging(device,
-                       physicalDevice,
+    HostBuffer staging(device_,
                        size,
                        vk::BufferUsageFlagBits::eTransferSrc,
                        src);
-    copy(device, commandPool, queue, staging);
+    copy(commandPool, queue, staging);
 
     // If there are mip levels, then generate them. Otherwise, just go ahead and transition the image to Shader read-only
     if (info_.mipLevels > 1)
     {
-        generateMipmaps(device, physicalDevice, commandPool, queue);
+        generateMipmaps(commandPool, queue);
     }
     else
     {
-        transitionLayout(device,
-                         commandPool,
+        transitionLayout(commandPool,
                          queue,
                          vk::ImageLayout::eTransferDstOptimal,
                          vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -191,12 +182,11 @@ void LocalImage::set(vk::Device const &         device,
 //! @param  commandPool     Command buffer allocator
 //! @param  queue           Queue used to initialize the image
 //! @param  buffer          Image data
-void LocalImage::copy(vk::Device const &      device,
-                      vk::CommandPool const & commandPool,
+void LocalImage::copy(vk::CommandPool const & commandPool,
                       vk::Queue const &       queue,
                       vk::Buffer const &      buffer)
 {
-    executeOnceSynched(device,
+    executeOnceSynched(device_,
                        commandPool,
                        queue,
                        [this, &buffer] (vk::CommandBuffer & commands) {
@@ -215,8 +205,7 @@ void LocalImage::copy(vk::Device const &      device,
 //! @param  queue           Queue used to initialize the image
 //! @param  oldLayout       Current layout
 //! @param  newLayout       New layout
-void LocalImage::transitionLayout(vk::Device const &      device,
-                                  vk::CommandPool const & commandPool,
+void LocalImage::transitionLayout(vk::CommandPool const & commandPool,
                                   vk::Queue const &       queue,
                                   vk::ImageLayout         oldLayout,
                                   vk::ImageLayout         newLayout)
@@ -275,7 +264,7 @@ void LocalImage::transitionLayout(vk::Device const &      device,
                                    image_.get(),
                                    vk::ImageSubresourceRange(aspectMask, 0, info_.mipLevels, 0, 1));
 
-    executeOnceSynched(device,
+    executeOnceSynched(device_,
                        commandPool,
                        queue,
                        [srcStage, dstStage, &barrier] (vk::CommandBuffer & commands) {
@@ -287,16 +276,14 @@ void LocalImage::transitionLayout(vk::Device const &      device,
 //! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
-void LocalImage::generateMipmaps(vk::Device const &         device,
-                                 vk::PhysicalDevice const & physicalDevice,
-                                 vk::CommandPool const &    commandPool,
+void LocalImage::generateMipmaps(vk::CommandPool const &    commandPool,
                                  vk::Queue const &          queue)
 {
     // Check if image format supports blitting with linear filtering
-    vk::FormatProperties formatProperties = physicalDevice.getFormatProperties(info_.format);
+    vk::FormatProperties formatProperties = device_->physical()->getFormatProperties(info_.format);
     if (!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear))
         throw std::runtime_error("texture image format does not support linear blitting!");
-    executeOnceSynched(device,
+    executeOnceSynched(device_,
                        commandPool,
                        queue,
                        [this] (vk::CommandBuffer & commands) {
@@ -384,15 +371,13 @@ void LocalImage::generateMipmaps(vk::Device const &         device,
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 //! @param  info                Creation info
-DepthImage::DepthImage(vk::Device const &         device,
-                       vk::PhysicalDevice const & physicalDevice,
+DepthImage::DepthImage(std::shared_ptr<Device>    device,
                        vk::CommandPool const &    commandPool,
                        vk::Queue const &          queue,
                        vk::ImageCreateInfo        info)
-    : LocalImage(device, physicalDevice, info, vk::ImageAspectFlagBits::eDepth)
+    : LocalImage(device, info, vk::ImageAspectFlagBits::eDepth)
 {
-    transitionLayout(device,
-                     commandPool,
+    transitionLayout(commandPool,
                      queue,
                      vk::ImageLayout::eUndefined,
                      vk::ImageLayout::eDepthStencilAttachmentOptimal);
@@ -403,15 +388,13 @@ DepthImage::DepthImage(vk::Device const &         device,
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 //! @param  info                Creation info
-ResolveImage::ResolveImage(vk::Device const &         device,
-                           vk::PhysicalDevice const & physicalDevice,
+ResolveImage::ResolveImage(std::shared_ptr<Device>    device,
                            vk::CommandPool const &    commandPool,
                            vk::Queue const &          queue,
                            vk::ImageCreateInfo        info)
-    : LocalImage(device, physicalDevice, info)
+    : LocalImage(device, info)
 {
-    transitionLayout(device,
-                     commandPool,
+    transitionLayout(commandPool,
                      queue,
                      vk::ImageLayout::eUndefined,
                      vk::ImageLayout::eColorAttachmentOptimal);

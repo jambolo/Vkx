@@ -6,27 +6,28 @@ namespace Vkx
 {
 //! @param  physicalDevice  Physical device to be associated with this device
 //! @param  info            Creation info
-Device::Device(vk::PhysicalDevice const & physicalDevice, vk::DeviceCreateInfo const & info)
+    Device::Device(std::shared_ptr<PhysicalDevice> physicalDevice, vk::DeviceCreateInfo const & info)
+    : vk::Device(physicalDevice->createDevice(info))
+    , physicalDevice_(physicalDevice)
 {
-    device_ = physicalDevice.createDevice(info);
 }
 
 //! @param  src     Move source
 Device::Device(Device && src)
 {
-    device_ = std::move(src.device_);
+    physicalDevice_ = std::move(src.physicalDevice_);
 }
 
 Device::~Device()
 {
-    device_.destroy();
+    vk::Device::destroy();
 }
 
 //! @param  rhs     Move source
 Device & Device::operator =(Device && rhs)
 {
     if (this != &rhs)
-        device_ = std::move(rhs.device_);
+        physicalDevice_ = std::move(rhs.physicalDevice_);
     return *this;
 }
 } // namespace Vkx

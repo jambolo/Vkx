@@ -16,18 +16,17 @@ namespace Vkx
 //! @param  name
 bool extensionIsSupported(std::vector<vk::ExtensionProperties> & extensions, char const * name)
 {
-    std::vector<vk::ExtensionProperties>::const_iterator i = std::find_if(extensions.begin(),
-                                                                          extensions.end(),
-                                                                          [name] (vk::ExtensionProperties const & e) {
-                                                                              return strcmp(name, e.extensionName) == 0;
-                                                                          });
-
+    std::vector<vk::ExtensionProperties>::const_iterator i;
+    i = std::find_if(extensions.begin(),
+                     extensions.end(),
+                     [name] (vk::ExtensionProperties const & e) { return strcmp(name, e.extensionName) == 0; });
     return i != extensions.end();
 }
 
 //! @param  physicalDevice
 //! @param  extensions
-bool allExtensionsSupported(vk::PhysicalDevice const & physicalDevice, std::vector<char const *> const & extensions)
+    bool allExtensionsSupported(vk::PhysicalDevice const &        physicalDevice,
+                                std::vector<char const *> const & extensions)
 {
     std::vector<vk::ExtensionProperties> available = physicalDevice.enumerateDeviceExtensionProperties(nullptr);
     for (auto const & required : extensions)
@@ -42,12 +41,10 @@ bool allExtensionsSupported(vk::PhysicalDevice const & physicalDevice, std::vect
 //! @param  name
 bool layerIsAvailable(std::vector<vk::LayerProperties> layers, char const * name)
 {
-    std::vector<vk::LayerProperties>::const_iterator i = std::find_if(layers.begin(),
-                                                                      layers.end(),
-                                                                      [name] (vk::LayerProperties const & e) {
-                                                                          return strcmp(name, e.layerName) == 0;
-                                                                      });
-
+    std::vector<vk::LayerProperties>::const_iterator i;
+    i = std::find_if(layers.begin(),
+                     layers.end(),
+                     [name] (vk::LayerProperties const & e) { return strcmp(name, e.layerName) == 0; });
     return i != layers.end();
 }
 
@@ -72,7 +69,7 @@ bool allLayersAvailable(std::vector<char const *> const & requested)
 //!
 //! @warning   std::runtime_error is thrown if the file cannot be opened
 vk::ShaderModule loadShaderModule(std::string const &         path,
-                                  vk::Device &                device,
+                                  std::shared_ptr<Device>     device,
                                   vk::ShaderModuleCreateFlags flags /*= vk::ShaderModuleCreateFlags()*/)
 {
     // Load the code
@@ -86,7 +83,7 @@ vk::ShaderModule loadShaderModule(std::string const &         path,
     file.read((char *)buffer.data(), fileSize);
 
     // Create the module for the device
-    vk::ShaderModule shaderModule = device.createShaderModule({ flags, buffer.size() * sizeof(uint32_t), buffer.data() });
+    vk::ShaderModule shaderModule = device->createShaderModule({ flags, buffer.size() * sizeof(uint32_t), buffer.data() });
 
     return shaderModule;
 }
@@ -98,9 +95,11 @@ vk::ShaderModule loadShaderModule(std::string const &         path,
 //! @return     index of the type of memory provided by the physical device that matches the request
 //!
 //! @warning    A std::runtime_error is thrown if an appropriate type is not available
-uint32_t findAppropriateMemoryType(vk::PhysicalDevice const & physicalDevice, uint32_t types, vk::MemoryPropertyFlags properties)
+uint32_t findAppropriateMemoryType(std::shared_ptr<PhysicalDevice> physicalDevice,
+                                   uint32_t types,
+                                   vk::MemoryPropertyFlags properties)
 {
-    vk::PhysicalDeviceMemoryProperties info = physicalDevice.getMemoryProperties();
+    vk::PhysicalDeviceMemoryProperties info = physicalDevice->getMemoryProperties();
     for (uint32_t i = 0; i < info.memoryTypeCount; ++i)
     {
         if ((types & (1 << i)) == 0)
@@ -127,12 +126,12 @@ uint32_t findAppropriateMemoryType(vk::PhysicalDevice const & physicalDevice, ui
 //!
 //! @note       commandPool should specify a pool optimized for transient command buffers
 
-void executeOnceSynched(vk::Device const &                     device,
+    void executeOnceSynched(std::shared_ptr<Device>            device,
                         vk::CommandPool const &                commandPool,
                         vk::Queue const &                      queue,
                         std::function<void(vk::CommandBuffer)> commands)
 {
-    std::vector<vk::UniqueCommandBuffer> commandBuffers = device.allocateCommandBuffersUnique(
+    std::vector<vk::UniqueCommandBuffer> commandBuffers = device->allocateCommandBuffersUnique(
         vk::CommandBufferAllocateInfo(commandPool,
                                       vk::CommandBufferLevel::ePrimary,
                                       1));

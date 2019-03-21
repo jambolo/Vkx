@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+#include <Vkx/Device.h>
 #include <Vkx/Vkx.h>
 
 namespace Vkx
@@ -18,8 +19,7 @@ public:
     Image() = default;
 
     //! Constructor.
-    Image(vk::Device const &          device,
-          vk::PhysicalDevice const &  physicalDevice,
+    Image(std::shared_ptr<Device>     device,
           vk::ImageCreateInfo const & info,
           vk::MemoryPropertyFlags     memoryProperties,
           vk::ImageAspectFlags        aspect);
@@ -28,19 +28,24 @@ public:
     Image(Image && src);
 
     //! Destructor.
-    virtual ~Image() = default;
+    virtual ~Image()
+    {
+        device_->destroy(view_);
+        device_->destroy(image_);
+        device_->free(allocation_);
+    }
 
     //! Move-assignment operator
     Image & operator =(Image && rhs);
 
     //! Implicitly converts into a vk::Image.
-    operator vk::Image() const { return image_.get(); }
+    operator vk::Image() const { return image_; }
 
     //! Returns the DeviceMemory handle.
-    vk::DeviceMemory allocation() const { return allocation_.get(); }
+    vk::DeviceMemory allocation() const { return allocation_; }
 
     //! Returns the view
-    vk::ImageView view() const { return view_.get(); }
+    vk::ImageView view() const { return view_; }
 
     //! Returns the creation info.
     vk::ImageCreateInfo info() const { return info_; }
@@ -49,10 +54,11 @@ public:
     static uint32_t computeMaxMipLevels(uint32_t width, uint32_t height);
 
 protected:
+    std::shared_ptr<Device> device_;    //!< Device associated with this image
     vk::ImageCreateInfo info_;          //!< Info about the image
-    vk::UniqueDeviceMemory allocation_; //!< The image data
-    vk::UniqueImage image_;             //!< The image
-    vk::UniqueImageView view_;          //!< The image view
+    vk::DeviceMemory allocation_;       //!< The image data
+    vk::Image image_;                   //!< The image
+    vk::ImageView view_;                //!< The image view
 };
 
 //! An Image that is visible to the CPU and is automatically kept in sync (eHostVisible | eHostCoherent).
@@ -63,15 +69,14 @@ public:
     HostImage() = default;
 
     //! Constructor.
-    HostImage(vk::Device const &          device,
-              vk::PhysicalDevice const &  physicalDevice,
+    HostImage(std::shared_ptr<Device>     device,
               vk::ImageCreateInfo const & info,
               void const *                src = nullptr,
               size_t                      size = 0,
               vk::ImageAspectFlags        aspect = vk::ImageAspectFlagBits::eColor);
 
     //! Copies image data from CPU memory into the image.
-    void set(vk::Device const & device, void const * src, size_t offset, size_t size);
+    void set(void const * src, size_t offset, size_t size);
 };
 
 //! An Image that is accessible only to the GPU (eDeviceLocal).
@@ -82,14 +87,12 @@ public:
     LocalImage() = default;
 
     //! Constructor.
-    LocalImage(vk::Device const &         device,
-               vk::PhysicalDevice const & physicalDevice,
+    LocalImage(std::shared_ptr<Device>    device,
                vk::ImageCreateInfo        info,
                vk::ImageAspectFlags       aspect = vk::ImageAspectFlagBits::eColor);
 
     //! Constructor.
-    LocalImage(vk::Device const &         device,
-               vk::PhysicalDevice const & physicalDevice,
+    LocalImage(std::shared_ptr<Device>    device,
                vk::CommandPool const &    commandPool,
                vk::Queue const &          queue,
                vk::ImageCreateInfo        info,
@@ -98,30 +101,24 @@ public:
                vk::ImageAspectFlags       aspect = vk::ImageAspectFlagBits::eColor);
 
     //! Copies data from CPU memory into the image
-    void set(vk::Device const &         device,
-             vk::PhysicalDevice const & physicalDevice,
-             vk::CommandPool const &    commandPool,
+    void set(vk::CommandPool const &    commandPool,
              vk::Queue const &          queue,
              void const *               src,
              size_t                     size);
 
     //! Copies data from a buffer into the image
-    void copy(vk::Device const &      device,
-              vk::CommandPool const & commandPool,
+    void copy(vk::CommandPool const & commandPool,
               vk::Queue const &       queue,
               vk::Buffer const &      buffer);
 
     //! Transitions the image's layout
-    void transitionLayout(vk::Device const &      device,
-                          vk::CommandPool const & commandPool,
+    void transitionLayout(vk::CommandPool const & commandPool,
                           vk::Queue const &       queue,
                           vk::ImageLayout         oldLayout,
                           vk::ImageLayout         newLayout);
 
     //! Generates mipmaps for the image
-    void generateMipmaps(vk::Device const &         device,
-                         vk::PhysicalDevice const & physicalDevice,
-                         vk::CommandPool const &    commandPool,
+    void generateMipmaps(vk::CommandPool const &    commandPool,
                          vk::Queue const &          queue);
 };
 
@@ -133,8 +130,7 @@ public:
     DepthImage() = default;
 
     //! Constructor.
-    DepthImage(vk::Device const &         device,
-               vk::PhysicalDevice const & physicalDevice,
+    DepthImage(std::shared_ptr<Device>    device,
                vk::CommandPool const &    commandPool,
                vk::Queue const &          queue,
                vk::ImageCreateInfo        info);
@@ -148,8 +144,7 @@ public:
     ResolveImage() = default;
 
     //! Constructor.
-    ResolveImage(vk::Device const &         device,
-                 vk::PhysicalDevice const & physicalDevice,
+    ResolveImage(std::shared_ptr<Device>    device,
                  vk::CommandPool const &    commandPool,
                  vk::Queue const &          queue,
                  vk::ImageCreateInfo        info);
