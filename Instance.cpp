@@ -10,8 +10,19 @@ Instance::Instance(vk::InstanceCreateInfo const & info)
 {
 }
 
+Instance::Instance(Instance && src)
+    : vk::Instance(src)
+{
+}
+
 Instance::~Instance()
 {
     vk::Instance::destroy();
+}
+
+Vkx::Instance & Instance::operator =(Instance && rhs)
+{
+    vk::Instance::operator =(rhs);
+    return *this;
 }
 } // namespace Vkx

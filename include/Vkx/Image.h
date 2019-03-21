@@ -28,12 +28,7 @@ public:
     Image(Image && src);
 
     //! Destructor.
-    virtual ~Image()
-    {
-        device_->destroy(view_);
-        device_->destroy(image_);
-        device_->free(allocation_);
-    }
+    virtual ~Image();
 
     //! Move-assignment operator
     Image & operator =(Image && rhs);
@@ -59,6 +54,11 @@ protected:
     vk::DeviceMemory allocation_;       //!< The image data
     vk::Image image_;                   //!< The image
     vk::ImageView view_;                //!< The image view
+
+private:
+    // Non-copyable
+    Image(Image &) = delete;
+    Image & operator =(Image &) = delete;
 };
 
 //! An Image that is visible to the CPU and is automatically kept in sync (eHostVisible | eHostCoherent).
@@ -87,24 +87,24 @@ public:
     LocalImage() = default;
 
     //! Constructor.
-    LocalImage(std::shared_ptr<Device>    device,
-               vk::ImageCreateInfo        info,
-               vk::ImageAspectFlags       aspect = vk::ImageAspectFlagBits::eColor);
+    LocalImage(std::shared_ptr<Device> device,
+               vk::ImageCreateInfo     info,
+               vk::ImageAspectFlags    aspect = vk::ImageAspectFlagBits::eColor);
 
     //! Constructor.
-    LocalImage(std::shared_ptr<Device>    device,
-               vk::CommandPool const &    commandPool,
-               vk::Queue const &          queue,
-               vk::ImageCreateInfo        info,
-               void const *               src,
-               size_t                     size,
-               vk::ImageAspectFlags       aspect = vk::ImageAspectFlagBits::eColor);
+    LocalImage(std::shared_ptr<Device> device,
+               vk::CommandPool const & commandPool,
+               vk::Queue const &       queue,
+               vk::ImageCreateInfo     info,
+               void const *            src,
+               size_t                  size,
+               vk::ImageAspectFlags    aspect = vk::ImageAspectFlagBits::eColor);
 
     //! Copies data from CPU memory into the image
-    void set(vk::CommandPool const &    commandPool,
-             vk::Queue const &          queue,
-             void const *               src,
-             size_t                     size);
+    void set(vk::CommandPool const & commandPool,
+             vk::Queue const &       queue,
+             void const *            src,
+             size_t                  size);
 
     //! Copies data from a buffer into the image
     void copy(vk::CommandPool const & commandPool,
@@ -118,8 +118,8 @@ public:
                           vk::ImageLayout         newLayout);
 
     //! Generates mipmaps for the image
-    void generateMipmaps(vk::CommandPool const &    commandPool,
-                         vk::Queue const &          queue);
+    void generateMipmaps(vk::CommandPool const & commandPool,
+                         vk::Queue const &       queue);
 };
 
 //! A LocalImage for use as a depth buffer (vk::ImageAspect::eDEPTH).
@@ -130,10 +130,10 @@ public:
     DepthImage() = default;
 
     //! Constructor.
-    DepthImage(std::shared_ptr<Device>    device,
-               vk::CommandPool const &    commandPool,
-               vk::Queue const &          queue,
-               vk::ImageCreateInfo        info);
+    DepthImage(std::shared_ptr<Device> device,
+               vk::CommandPool const & commandPool,
+               vk::Queue const &       queue,
+               vk::ImageCreateInfo     info);
 };
 
 //! A LocalImage for use as a MSAA buffer (vk::ImageLayout::eColorAttachmentOptimal).
@@ -144,10 +144,10 @@ public:
     ResolveImage() = default;
 
     //! Constructor.
-    ResolveImage(std::shared_ptr<Device>    device,
-                 vk::CommandPool const &    commandPool,
-                 vk::Queue const &          queue,
-                 vk::ImageCreateInfo        info);
+    ResolveImage(std::shared_ptr<Device> device,
+                 vk::CommandPool const & commandPool,
+                 vk::Queue const &       queue,
+                 vk::ImageCreateInfo     info);
 };
 }
 

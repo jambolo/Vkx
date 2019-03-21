@@ -6,8 +6,8 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include <Vkx/Instance.h>
 #include <vulkan/vulkan.hpp>
+#include <Vkx/Instance.h>
 
 namespace Vkx
 {
@@ -15,7 +15,7 @@ class PhysicalDevice;
 
 //! A RAII extension to vk::Device.
 //!
-//! @note   This class is movable, but not copyable.
+//! @note   Instances can be moved, but cannot be copied.
 
 class Device : public vk::Device
 {
@@ -53,8 +53,8 @@ public:
     //! @param  chooser         Chooses which vk::PhysicalDevice this object wraps
     PhysicalDevice(std::shared_ptr<Instance> &                                                instance,
                    std::function<vk::PhysicalDevice(std::vector<vk::PhysicalDevice> const &)> chooser)
-    : vk::PhysicalDevice(chooser(instance->enumeratePhysicalDevices()))
-    , instance_(instance)
+        : vk::PhysicalDevice(chooser(instance->enumeratePhysicalDevices()))
+        , instance_(instance)
     {
     }
 

@@ -9,7 +9,7 @@ namespace Vkx
 {
 //! A RAII extension to vk::Instance.
 //!
-//! @note   The class is movable, but not copyable.
+//! @note   Instances can be moved, but cannot be copied.
 
 class Instance : public vk::Instance
 {
@@ -18,18 +18,17 @@ public:
     Instance(vk::InstanceCreateInfo const & info);
 
     //! Move constructor.
-    Instance(Instance && src) : vk::Instance(src) {}
+    Instance(Instance && src);
 
     ~Instance();
 
     //! Move-assignment operator
-    Instance & operator =(Instance && rhs) { vk::Instance::operator =(rhs); return *this; }
+    Instance & operator =(Instance && rhs);
 
 private:
     // Non-copyable
     Instance(Instance const &) = delete;
     Instance & operator =(Instance const &) = delete;
-
 };
 } // namespace Vkx
 

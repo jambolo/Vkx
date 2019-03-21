@@ -29,15 +29,15 @@ Image::Image(std::shared_ptr<Device>     device,
 {
     image_ = device->createImage(info_);
 
-    vk::MemoryRequirements requirements = device->getImageMemoryRequirements(image_.get());
+    vk::MemoryRequirements requirements = device->getImageMemoryRequirements(image_);
     uint32_t memoryType = findAppropriateMemoryType(device->physical(), requirements.memoryTypeBits, memoryProperties);
 
     allocation_ = device->allocateMemory(vk::MemoryAllocateInfo(requirements.size, memoryType));
-    device->bindImageMemory(image_.get(), allocation_.get(), 0);
+    device->bindImageMemory(image_, allocation_, 0);
 
     view_ = device->createImageView(
         vk::ImageViewCreateInfo({},
-                                image_.get(),
+                                image_,
                                 vk::ImageViewType::e2D,
                                 info_.format,
                                 vk::ComponentMapping(),
@@ -47,10 +47,21 @@ Image::Image(std::shared_ptr<Device>     device,
 //! @param  src     Move source
 Image::Image(Image && src)
 {
+    device_     = std::move(src.device_);
     info_       = std::move(src.info_);
     allocation_ = std::move(src.allocation_);
     image_      = std::move(src.image_);
     view_       = std::move(src.view_);
+}
+
+Image::~Image()
+{
+    if (device_)
+    {
+        device_->destroy(view_);
+        device_->destroy(image_);
+        device_->free(allocation_);
+    }
 }
 
 //! This function returns the number of mip levels needed to reach a 1x1 texture, assuming that the values are integers and the
@@ -70,6 +81,7 @@ Image & Image::operator =(Image && rhs)
 {
     if (this != &rhs)
     {
+        device_     = std::move(rhs.device_);
         info_       = std::move(rhs.info_);
         allocation_ = std::move(rhs.allocation_);
         image_      = std::move(rhs.image_);
@@ -113,9 +125,9 @@ void HostImage::set(void const * src, size_t offset, size_t size)
 //! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  info                Creation info
 //! @param  aspect              Image aspect
-LocalImage::LocalImage(std::shared_ptr<Device>    device,
-                       vk::ImageCreateInfo        info,
-                       vk::ImageAspectFlags       aspect /*= vk::ImageAspectFlagBits::eColor*/)
+LocalImage::LocalImage(std::shared_ptr<Device> device,
+                       vk::ImageCreateInfo     info,
+                       vk::ImageAspectFlags    aspect /*= vk::ImageAspectFlagBits::eColor*/)
     : Image(device, info, vk::MemoryPropertyFlagBits::eDeviceLocal, aspect)
 {
 }
@@ -128,13 +140,13 @@ LocalImage::LocalImage(std::shared_ptr<Device>    device,
 //! @param  src                 Image data
 //! @param  size                Size of image data
 //! @param  aspect              Image aspect
-LocalImage::LocalImage(std::shared_ptr<Device>    device,
-                       vk::CommandPool const &    commandPool,
-                       vk::Queue const &          queue,
-                       vk::ImageCreateInfo        info,
-                       void const *               src,
-                       size_t                     size,
-                       vk::ImageAspectFlags       aspect /*= vk::ImageAspectFlagBits::eColor*/)
+LocalImage::LocalImage(std::shared_ptr<Device> device,
+                       vk::CommandPool const & commandPool,
+                       vk::Queue const &       queue,
+                       vk::ImageCreateInfo     info,
+                       void const *            src,
+                       size_t                  size,
+                       vk::ImageAspectFlags    aspect /*= vk::ImageAspectFlagBits::eColor*/)
     : Image(device, info, vk::MemoryPropertyFlagBits::eDeviceLocal, aspect)
 {
     set(commandPool, queue, src, size);
@@ -146,10 +158,10 @@ LocalImage::LocalImage(std::shared_ptr<Device>    device,
 //! @param  queue               Queue used to initialize the image
 //! @param  src                 Image data
 //! @param  size                Size of image data
-void LocalImage::set(vk::CommandPool const &    commandPool,
-                     vk::Queue const &          queue,
-                     void const *               src,
-                     size_t                     size)
+void LocalImage::set(vk::CommandPool const & commandPool,
+                     vk::Queue const &       queue,
+                     void const *            src,
+                     size_t                  size)
 {
     // Transition to transfer dst for copy
     transitionLayout(commandPool,
@@ -196,7 +208,7 @@ void LocalImage::copy(vk::CommandPool const & commandPool,
                                                       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
                                                       { 0, 0, 0 },
                                                       { info_.extent.width, info_.extent.height, 1 });
-                           commands.copyBufferToImage(buffer, image_.get(), vk::ImageLayout::eTransferDstOptimal, region);
+                           commands.copyBufferToImage(buffer, image_, vk::ImageLayout::eTransferDstOptimal, region);
                        });
 }
 
@@ -261,7 +273,7 @@ void LocalImage::transitionLayout(vk::CommandPool const & commandPool,
                                    newLayout,
                                    VK_QUEUE_FAMILY_IGNORED,
                                    VK_QUEUE_FAMILY_IGNORED,
-                                   image_.get(),
+                                   image_,
                                    vk::ImageSubresourceRange(aspectMask, 0, info_.mipLevels, 0, 1));
 
     executeOnceSynched(device_,
@@ -276,8 +288,8 @@ void LocalImage::transitionLayout(vk::CommandPool const & commandPool,
 //! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
-void LocalImage::generateMipmaps(vk::CommandPool const &    commandPool,
-                                 vk::Queue const &          queue)
+void LocalImage::generateMipmaps(vk::CommandPool const & commandPool,
+                                 vk::Queue const &       queue)
 {
     // Check if image format supports blitting with linear filtering
     vk::FormatProperties formatProperties = device_->physical()->getFormatProperties(info_.format);
@@ -293,7 +305,7 @@ void LocalImage::generateMipmaps(vk::CommandPool const &    commandPool,
                                                           vk::ImageLayout::eUndefined,
                                                           VK_QUEUE_FAMILY_IGNORED,
                                                           VK_QUEUE_FAMILY_IGNORED,
-                                                          image_.get(),
+                                                          image_,
                                                           vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
 
                            int32_t mipWidth  = info_.extent.width;
@@ -324,9 +336,9 @@ void LocalImage::generateMipmaps(vk::CommandPool const &    commandPool,
                                                         barrier);
 
                                // Blit the previous mip level to the current mip level
-                               commands.blitImage(image_.get(),
+                               commands.blitImage(image_,
                                                   vk::ImageLayout::eTransferSrcOptimal,
-                                                  image_.get(),
+                                                  image_,
                                                   vk::ImageLayout::eTransferDstOptimal,
                                                   vk::ImageBlit(
                                                       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, i - 1, 0, 1),
@@ -371,10 +383,10 @@ void LocalImage::generateMipmaps(vk::CommandPool const &    commandPool,
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 //! @param  info                Creation info
-DepthImage::DepthImage(std::shared_ptr<Device>    device,
-                       vk::CommandPool const &    commandPool,
-                       vk::Queue const &          queue,
-                       vk::ImageCreateInfo        info)
+DepthImage::DepthImage(std::shared_ptr<Device> device,
+                       vk::CommandPool const & commandPool,
+                       vk::Queue const &       queue,
+                       vk::ImageCreateInfo     info)
     : LocalImage(device, info, vk::ImageAspectFlagBits::eDepth)
 {
     transitionLayout(commandPool,
@@ -388,10 +400,10 @@ DepthImage::DepthImage(std::shared_ptr<Device>    device,
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 //! @param  info                Creation info
-ResolveImage::ResolveImage(std::shared_ptr<Device>    device,
-                           vk::CommandPool const &    commandPool,
-                           vk::Queue const &          queue,
-                           vk::ImageCreateInfo        info)
+ResolveImage::ResolveImage(std::shared_ptr<Device> device,
+                           vk::CommandPool const & commandPool,
+                           vk::Queue const &       queue,
+                           vk::ImageCreateInfo     info)
     : LocalImage(device, info)
 {
     transitionLayout(commandPool,
