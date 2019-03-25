@@ -43,7 +43,7 @@ uint32_t findAppropriateMemoryType(std::shared_ptr<PhysicalDevice> physicalDevic
 void executeOnceSynched(std::shared_ptr<Device>                device,
                         vk::CommandPool const &                commandPool,
                         vk::Queue const &                      queue,
-                        std::function<void(vk::CommandBuffer)> commands);
+                        std::function<void(vk::CommandBuffer &)> commands);
 
 namespace ColorComponentFlags
 {
