@@ -8,13 +8,20 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-
-//! Extensions to Vulkan
+//! Extensions to Vulkan.
 namespace Vkx
 {
 class Buffer;
 class Device;
 class PhysicalDevice;
+
+class Texture : public LocalImage
+{
+};
+
+class Material
+{
+};
 
 //! Returns true if the extension is supported.
 bool extensionIsSupported(std::vector<vk::ExtensionProperties> & extensions, char const * name);
@@ -40,10 +47,16 @@ uint32_t findAppropriateMemoryType(std::shared_ptr<PhysicalDevice> physicalDevic
                                    vk::MemoryPropertyFlags         properties);
 
 //! Creates and executes a one-time command buffer.
-void executeOnceSynched(std::shared_ptr<Device>                device,
-                        vk::CommandPool const &                commandPool,
-                        vk::Queue const &                      queue,
+void executeOnceSynched(std::shared_ptr<Device>                  device,
+                        vk::CommandPool const &                  commandPool,
+                        vk::Queue const &                        queue,
                         std::function<void(vk::CommandBuffer &)> commands);
+
+//! Strips a grid generating 16-bit indexes.
+int stripGrid(int w, int h, uint16_t * pData);
+
+//! Strips a grid generating 32-bit indexes.
+int stripGrid(int w, int h, uint32_t * pData);
 
 namespace ColorComponentFlags
 {
@@ -68,7 +81,7 @@ namespace MessageSeverityFlags
     //!< All
     //!< severities
 }
-}
+}   // namespace DebugUtils
 } // namespace Vkx
 
 #endif // !defined(VKX_VKX_H)

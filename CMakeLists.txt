@@ -24,6 +24,7 @@ endif()
 #configure_file("${PROJECT_SOURCE_DIR}/Version.h.in" "${PROJECT_BINARY_DIR}/Version.h")
 
 find_package(Vulkan REQUIRED)
+find_package(glm REQUIRED)
 
 set(PUBLIC_INCLUDE_PATHS
     include
@@ -36,21 +37,33 @@ set(PRIVATE_INCLUDE_PATHS
 
 set(SOURCES
     include/Vkx/Buffer.h
+    include/Vkx/Camera.h
     include/Vkx/Device.h
+    include/Vkx/Frame.h
     include/Vkx/Image.h
     include/Vkx/Instance.h
+    include/Vkx/Light.h
+    include/Vkx/Random.h
+    include/Vkx/TextureManager.h
     include/Vkx/Vkx.h
     
     Buffer.cpp
+    Camera.cpp
+    ComputeFaceNormal.cpp
     Device.cpp
+    Frame.cpp
     Image.cpp
     Instance.cpp
+    Light.cpp
+    Random.cpp
+    StripGrid.cpp
+    TextureManager.cpp
     Vkx.cpp
 )
 source_group(Sources FILES ${SOURCES})
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
-target_link_libraries(${PROJECT_NAME} PUBLIC  Vulkan::Vulkan)
+target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan glm)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PUBLIC_INCLUDE_PATHS} PRIVATE ${PRIVATE_INCLUDE_PATHS})
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
