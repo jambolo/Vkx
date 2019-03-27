@@ -15,10 +15,6 @@ class Buffer;
 class Device;
 class PhysicalDevice;
 
-class Texture : public LocalImage
-{
-};
-
 class Material
 {
 };

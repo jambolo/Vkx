@@ -149,6 +149,10 @@ public:
                  vk::Queue const &       queue,
                  vk::ImageCreateInfo     info);
 };
-}
+
+class Texture : public LocalImage
+{
+};
+} // namespace Vkx
 
 #endif // !defined(VKX_IMAGE_H)
