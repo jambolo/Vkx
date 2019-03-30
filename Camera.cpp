@@ -3,7 +3,7 @@
 #include <glm/ext/quaternion_trigonometric.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_aligned.hpp>
+//#include <glm/gtc/type_aligned.hpp>
 
 #include <cassert>
 
@@ -25,8 +25,8 @@ Camera::Camera(float             angleOfView,
     : angleOfView_(glm::radians(angleOfView))
     , nearDistance_(nearDistance)
     , farDistance_(farDistance)
-    , frame_(position, orientation)
     , aspectRatio_(aspectRatio)
+    , frame_(position, orientation)
     , viewOffset_(0.0f, 0.0f)
 {
     syncInternalState();
@@ -46,8 +46,8 @@ Camera::Camera(float         angleOfView,
     : angleOfView_(glm::radians(angleOfView))
     , nearDistance_(nearDistance)
     , farDistance_(farDistance)
-    , frame_(frame)
     , aspectRatio_(aspectRatio)
+    , frame_(frame)
     , viewOffset_(0.0f, 0.0f)
 {
     syncInternalState();

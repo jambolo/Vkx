@@ -1,7 +1,7 @@
 #include <Vkx/Vkx.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/type_aligned.hpp>
+//#include <glm/gtc/type_aligned.hpp>
 
 namespace Vkx
 {

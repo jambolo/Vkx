@@ -123,12 +123,12 @@ protected:
     //! Syncs the internal state of the camera so that all values are consistent.
     void syncInternalState();
 
-    Frame frame_;                       //!< View transformation
+    float angleOfView_;                 //!< Angle of view of the height of the display (in radians)
     float nearDistance_;                //!< The distance to the near clipping plane
     float farDistance_;                 //!< The distance to the far clipping plane
-    float angleOfView_;                 //!< Angle of view of the height of the display (in radians)
-    glm::vec2 viewOffset_;              //!< View window offset
     float aspectRatio_;                 //!< View window w / h
+    Frame frame_;                       //!< View transformation
+    glm::vec2 viewOffset_;              //!< View window offset
     glm::mat4x4 viewMatrix_;            //!< The current world-view transformation
     glm::mat4x4 projectionMatrix_;      //!< The current projection transformation
     glm::mat4x4 viewProjectionMatrix_;  //!< The concatenation of the view matrix and the projection matrix

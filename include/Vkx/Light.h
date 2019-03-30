@@ -371,8 +371,8 @@ private:
     glm::vec4 ambient_;
     glm::vec4 diffuse_;
     glm::vec4 specular_;
-    glm::vec3 direction_;
     glm::vec3 position_;
+    glm::vec3 direction_;
     float range_;
     float falloff_;
     float attenuation0_;
