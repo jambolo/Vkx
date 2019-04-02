@@ -1,0 +1,8 @@
+get_filename_component(Vkx_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+if(NOT TARGET Vkx::Vkx)
+    include("${Vkx_CMAKE_DIR}/VkxTargets.cmake")
+endif()
+
+set(Vkx_LIBRARIES Vkx::Vkx)

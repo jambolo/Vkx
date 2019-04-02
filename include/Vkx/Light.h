@@ -18,6 +18,7 @@ class Light
 {
 public:
 
+    //! Type of light.
     enum TypeId
     {
         CUSTOM = -1,
@@ -98,8 +99,8 @@ private:
     glm::vec4 ambient_;
 };
 
-//! A point light
-//
+//! A point light.
+//!
 //! @ingroup Lights
 //!
 
@@ -192,8 +193,8 @@ private:
     float attenuation2_;
 };
 
-//! A directional light
-//
+//! A directional light.
+//!
 //! @ingroup Lights
 //!
 
@@ -201,10 +202,10 @@ class DirectionalLight : public Light
 {
 public:
 
-    //! Constructor
+    //! Constructor.
     DirectionalLight(int id);
 
-    //! Constructor
+    //! Constructor.
     DirectionalLight(int               id,
                      glm::vec4 const & ambient,
                      glm::vec4 const & diffuse,
@@ -252,8 +253,8 @@ private:
     glm::vec3 direction_;
 };
 
-//! A spot light
-//
+//! A spot light.
+//!
 //! @ingroup Lights
 //!
 
@@ -264,7 +265,7 @@ public:
     //! Constructor
     SpotLight(int id);
 
-    //! Constructor
+    //! Constructor.
     SpotLight(int               id,
               glm::vec4 const & ambient,
               glm::vec4 const & diffuse,

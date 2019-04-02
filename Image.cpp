@@ -91,7 +91,6 @@ Image & Image::operator =(Image && rhs)
 }
 
 //! @param  device              Logical device associated with the image
-//! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  info                Creation info
 //! @param  src                 Image data
 //! @param  size                Size of image data
@@ -110,7 +109,6 @@ HostImage::HostImage(std::shared_ptr<Device>     device,
         set(src, 0, size);
 }
 
-//! @param  device      Logical device associated with the image
 //! @param  src         Source data
 //! @param  offset      Offset to the start of the image in the source data
 //! @param  size        Size of image data
@@ -122,7 +120,6 @@ void HostImage::set(void const * src, size_t offset, size_t size)
 }
 
 //! @param  device              Logical device associated with the image
-//! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  info                Creation info
 //! @param  aspect              Image aspect
 LocalImage::LocalImage(std::shared_ptr<Device> device,
@@ -133,7 +130,6 @@ LocalImage::LocalImage(std::shared_ptr<Device> device,
 }
 
 //! @param  device              Logical device associated with the image
-//! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 //! @param  info                Creation info
@@ -152,8 +148,6 @@ LocalImage::LocalImage(std::shared_ptr<Device> device,
     set(commandPool, queue, src, size);
 }
 
-//! @param  device              Logical device associated with the image
-//! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 //! @param  src                 Image data
@@ -190,7 +184,6 @@ void LocalImage::set(vk::CommandPool const & commandPool,
     }
 }
 
-//! @param  device          Logical device associated with the image
 //! @param  commandPool     Command buffer allocator
 //! @param  queue           Queue used to initialize the image
 //! @param  buffer          Image data
@@ -212,7 +205,6 @@ void LocalImage::copy(vk::CommandPool const & commandPool,
                        });
 }
 
-//! @param  device          Logical device associated with the image
 //! @param  commandPool     Command buffer allocator
 //! @param  queue           Queue used to initialize the image
 //! @param  oldLayout       Current layout
@@ -284,8 +276,6 @@ void LocalImage::transitionLayout(vk::CommandPool const & commandPool,
                        });
 }
 
-//! @param  device              Logical device associated with the image
-//! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 void LocalImage::generateMipmaps(vk::CommandPool const & commandPool,
@@ -379,7 +369,6 @@ void LocalImage::generateMipmaps(vk::CommandPool const & commandPool,
 }
 
 //! @param  device              Logical device associated with the image
-//! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 //! @param  info                Creation info
@@ -396,7 +385,6 @@ DepthImage::DepthImage(std::shared_ptr<Device> device,
 }
 
 //! @param  device              Logical device associated with the image
-//! @param  physicalDevice      Physical device associated with the image's allocation
 //! @param  commandPool         Command buffer allocator
 //! @param  queue               Queue used to initialize the image
 //! @param  info                Creation info

@@ -66,7 +66,6 @@ Buffer & Buffer::operator =(Buffer && rhs)
 }
 
 //! @param  device          Logical device associated with the buffer
-//! @param  physicalDevice  Physical device associated with the buffer's allocation
 //! @param  size            Nominal size of the buffer
 //! @param  usage           Usage flags
 //! @param  src             Data to be copied into the buffer, or nullptr if nothing to copy (default: nullptr)
@@ -86,7 +85,6 @@ HostBuffer::HostBuffer(std::shared_ptr<Device> device,
         set(0, src, size);
 }
 
-//! @param  device  Logical device associated with the buffer
 //! @param  offset  Where in the buffer to put the copied data
 //! @param  src     Data to be copied into the buffer
 //! @param  size    Size of the data to copy
@@ -98,7 +96,6 @@ void HostBuffer::set(size_t offset, void const * src, size_t size)
 }
 
 //! @param  device          Logical device associated with the buffer
-//! @param  physicalDevice  Physical device associated with the buffer's allocation
 //! @param  size            Nominal size of the buffer
 //! @param  usage           Usage flags
 //! @param  sharingMode     Sharing mode flag (default: eExclusive)
@@ -115,7 +112,6 @@ LocalBuffer::LocalBuffer(std::shared_ptr<Device> device,
 }
 
 //! @param  device          Logical device associated with the buffer
-//! @param  physicalDevice  Physical device associated with the buffer's allocation
 //! @param  commandPool     Command pool used to initialize the buffer
 //! @param  queue           Queue used to initialize the buffer
 //! @param  size            Nominal size of the buffer
@@ -138,8 +134,6 @@ LocalBuffer::LocalBuffer(std::shared_ptr<Device> device,
     set(commandPool, queue, src, size);
 }
 
-//! @param  device          Logical device associated with the buffer
-//! @param  physicalDevice  Physical device associated with the buffer's allocation
 //! @param  commandPool     Command pool used to copy data into the buffer
 //! @param  queue           Queue used to copy data into the buffer
 //! @param  src             Data to be copied into the buffer

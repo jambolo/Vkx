@@ -174,7 +174,15 @@ PointLight::PointLight(int id)
 {
 }
 
-//! @param  id      An identifier for this light
+//! @param  id              An identifier for this light
+//! @param  ambient         Ambient color
+//! @param  diffuse         Diffuse color
+//! @param  specular        Specular color
+//! @param 	position        Location of the light
+//! @param 	range           Attenuation range factor
+//! @param 	attenuation0    Attenuation factor
+//! @param 	attenuation1    Attenuation factor
+//! @param 	attenuation2    Attenuation factor
 //!
 //! @note   Requirements for point lights:
 //!             - 0.0f <= range <= sqrt(FLT_MAX).
@@ -244,7 +252,11 @@ DirectionalLight::DirectionalLight(int id)
 {
 }
 
-//! @param  id      An identifier for this light
+//! @param  id          An identifier for this light
+//! @param  ambient     Ambient color
+//! @param  diffuse     Diffuse color
+//! @param  specular    Specular color
+//! @param  direction   Direction of the light
 //!
 //! @note   Requirements for directional lights:
 //!             - Direction must not be (0, 0, 0).
@@ -263,8 +275,13 @@ DirectionalLight::DirectionalLight(int               id,
     assert(direction.x != 0.0f || direction.y != 0.0f || direction.z != 0.0f);
 }
 
+//! @param  ambient     Ambient color
+//! @param  diffuse     Diffuse color
+//! @param  specular    Specular color
+//! @param  direction   Direction of the light
 //!
-//! @param    all        Lighting parameters (See the docs for D3DLIGHT9)
+//! @note   Requirements for directional lights:
+//!             - Direction must not be (0, 0, 0).
 
 void DirectionalLight::set(glm::vec4 const & ambient,
                            glm::vec4 const & diffuse,
@@ -316,7 +333,19 @@ SpotLight::SpotLight(int id)
 {
 }
 
-//! @param  id      An identifier for this light
+//! @param  id              An identifier for this light
+//! @param  ambient         Ambient color
+//! @param  diffuse         Diffuse color
+//! @param  specular        Specular color
+//! @param 	position        Location of the light
+//! @param  direction       Direction of the light
+//! @param 	range           Attenuation range factor
+//! @param 	falloff         Attenuation rate at the edge
+//! @param 	attenuation0    Attenuation factor
+//! @param 	attenuation1    Attenuation factor
+//! @param 	attenuation2    Attenuation factor
+//! @param 	theta           Angle where falloff starts
+//! @param 	phi             Angle limit of cone
 //!
 //! @note   Requirements for spot lights:
 //!             - Direction must not be (0, 0, 0).
@@ -325,6 +354,8 @@ SpotLight::SpotLight(int id)
 //!             - 0.0f < theta <= phi
 //!             - 0.0f < phi < pi.
 
+//!
+//! @return 
 SpotLight::SpotLight(int               id,
                      glm::vec4 const & ambient,
                      glm::vec4 const & diffuse,
