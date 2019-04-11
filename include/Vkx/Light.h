@@ -1,7 +1,7 @@
-#pragma once
-
 #if !defined(VKX_LIGHT_H)
 #define VKX_LIGHT_H
+
+#pragma once
 
 #include <glm/glm.hpp>
 

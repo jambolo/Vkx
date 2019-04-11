@@ -1,7 +1,7 @@
-#pragma once
-
 #if !defined(VKX_DEVICE_H)
 #define VKX_DEVICE_H
+
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -52,11 +52,11 @@ public:
     //! @param  instance        Instance providing the physical device
     //! @param  chooser         Chooses which vk::PhysicalDevice this object wraps
     PhysicalDevice(std::shared_ptr<Instance> &                                                instance,
-                   std::function<vk::PhysicalDevice(std::vector<vk::PhysicalDevice> const &)> chooser)
-        : vk::PhysicalDevice(chooser(instance->enumeratePhysicalDevices()))
-        , instance_(instance)
-    {
-    }
+                   std::function<vk::PhysicalDevice(std::vector<vk::PhysicalDevice> const &)> chooser);
+
+    PhysicalDevice::PhysicalDevice(PhysicalDevice && src);
+
+    PhysicalDevice & PhysicalDevice::operator =(PhysicalDevice && rhs);
 
     //! Returns the instance this physical device is associated with.
     std::shared_ptr<Instance> instance() const { return instance_; }

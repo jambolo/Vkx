@@ -39,9 +39,11 @@ Buffer::Buffer(std::shared_ptr<Device> device,
 //! @param  src     Move source
 Buffer::Buffer(Buffer && src)
     : device_(std::move(src.device_))
-    , allocation_(std::move(src.allocation_))
-    , buffer_(std::move(src.buffer_))
+    , allocation_(src.allocation_)
+    , buffer_(src.buffer_)
 {
+    src.allocation_ = nullptr;
+    src.buffer_ = nullptr;
 }
 
 Buffer::~Buffer()
@@ -52,15 +54,17 @@ Buffer::~Buffer()
         device_->free(allocation_);
     }
 }
-
+vk::UniqueBuffer x;
 //! @param  rhs     Move source
 Buffer & Buffer::operator =(Buffer && rhs)
 {
     if (this != &rhs)
     {
         device_     = std::move(rhs.device_);
-        allocation_ = std::move(rhs.allocation_);
-        buffer_     = std::move(rhs.buffer_);
+        allocation_ = rhs.allocation_;
+        buffer_     = rhs.buffer_;
+        rhs.allocation_ = nullptr;
+        rhs.buffer_ = nullptr;
     }
     return *this;
 }

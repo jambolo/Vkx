@@ -46,12 +46,16 @@ Image::Image(std::shared_ptr<Device>     device,
 
 //! @param  src     Move source
 Image::Image(Image && src)
+    : device_(std::move(src.device_))
+    , info_(src.info_)
+    , allocation_(src.allocation_)
+    , image_(src.image_)
+    , view_(src.view_)
 {
-    device_     = std::move(src.device_);
-    info_       = std::move(src.info_);
-    allocation_ = std::move(src.allocation_);
-    image_      = std::move(src.image_);
-    view_       = std::move(src.view_);
+//    src.info_ = vk::ImageCreateInfo(); c not necessary
+    src.allocation_ = nullptr;
+    src.image_      = nullptr;
+    src.view_       = nullptr;
 }
 
 Image::~Image()
@@ -81,11 +85,15 @@ Image & Image::operator =(Image && rhs)
 {
     if (this != &rhs)
     {
-        device_     = std::move(rhs.device_);
-        info_       = std::move(rhs.info_);
-        allocation_ = std::move(rhs.allocation_);
-        image_      = std::move(rhs.image_);
-        view_       = std::move(rhs.view_);
+        device_         = std::move(rhs.device_);
+        info_           = rhs.info_;
+        //rhs.info_       = vk::ImageCreateInfo(); not necessary
+        allocation_     = rhs.allocation_;
+        rhs.allocation_ = nullptr;
+        image_          = rhs.image_;
+        rhs.image_      = nullptr;
+        view_           = rhs.view_;
+        rhs.view_       = nullptr;
     }
     return *this;
 }
