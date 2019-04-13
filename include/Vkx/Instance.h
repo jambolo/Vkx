@@ -1,7 +1,7 @@
-#pragma once
-
 #if !defined(VKX_INSTANCE_H)
 #define VKX_INSTANCE_H
+
+#pragma once
 
 #include <vulkan/vulkan.hpp>
 

@@ -1,5 +1,7 @@
 #include "Device.h"
 
+#include "Instance.h"
+
 #include <vulkan/vulkan.hpp>
 
 namespace Vkx

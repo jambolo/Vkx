@@ -32,6 +32,7 @@ set(SOURCES
     include/Vkx/Instance.h
     include/Vkx/Light.h
     include/Vkx/Random.h
+    include/Vkx/SwapChain.h
     include/Vkx/TextureManager.h
     include/Vkx/Vkx.h
     
@@ -44,6 +45,7 @@ set(SOURCES
     Instance.cpp
     Light.cpp
     Random.cpp
+    SwapChain.cpp
     StripGrid.cpp
     TextureManager.cpp
     Vkx.cpp

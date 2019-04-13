@@ -7,10 +7,10 @@
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.hpp>
-#include <Vkx/Instance.h>
 
 namespace Vkx
 {
+class Instance;
 class PhysicalDevice;
 
 //! A RAII extension to vk::Device.
@@ -54,9 +54,9 @@ public:
     PhysicalDevice(std::shared_ptr<Instance> &                                                instance,
                    std::function<vk::PhysicalDevice(std::vector<vk::PhysicalDevice> const &)> chooser);
 
-    PhysicalDevice::PhysicalDevice(PhysicalDevice && src);
+    PhysicalDevice(PhysicalDevice && src);
 
-    PhysicalDevice & PhysicalDevice::operator =(PhysicalDevice && rhs);
+    PhysicalDevice & operator =(PhysicalDevice && rhs);
 
     //! Returns the instance this physical device is associated with.
     std::shared_ptr<Instance> instance() const { return instance_; }
