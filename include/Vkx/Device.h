@@ -13,9 +13,9 @@ namespace Vkx
 class Instance;
 class PhysicalDevice;
 
-//! A RAII extension to vk::Device.
+//! A destructible extension to vk::Device.
 //!
-//! @note   Instances can be moved, but cannot be copied.
+//! @note   A Device can be moved, but cannot be copied.
 
 class Device : public vk::Device
 {
@@ -42,7 +42,9 @@ private:
     std::shared_ptr<PhysicalDevice> physicalDevice_;
 };
 
-//! A RAII extension to vk::PhysicalDevice.
+//! A destructible extension to vk::PhysicalDevice.
+//!
+//! @note   A PhysicalDevice can be moved, but cannot be copied.
 class PhysicalDevice : public vk::PhysicalDevice
 {
 public:

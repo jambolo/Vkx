@@ -1,7 +1,7 @@
-#pragma once
-
 #if !defined(VKX_RANDOM_H)
 #define VKX_RANDOM_H
+
+#pragma once
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>

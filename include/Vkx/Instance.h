@@ -7,9 +7,9 @@
 
 namespace Vkx
 {
-//! A RAII extension to vk::Instance.
+//! A destructible extension to vk::Instance.
 //!
-//! @note   Instances can be moved, but cannot be copied.
+//! @note   An Instance can be moved, but cannot be copied.
 
 class Instance : public vk::Instance
 {

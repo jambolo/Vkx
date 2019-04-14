@@ -1,7 +1,7 @@
-#pragma once
-
 #if !defined(VKX_VKX_H)
 #define VKX_VKX_H
+
+#pragma once
 
 #include <functional>
 #include <string>

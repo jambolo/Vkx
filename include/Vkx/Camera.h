@@ -1,7 +1,7 @@
-#pragma once
-
 #if !defined(VKX_CAMERA_H)
 #define VKX_CAMERA_H
+
+#pragma once
 
 #include <glm/gtc/quaternion.hpp>
 #include <Vkx/Frame.h>

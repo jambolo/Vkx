@@ -1,7 +1,7 @@
-#pragma once
-
 #if !defined(VKX_BUFFER_H)
 #define VKX_BUFFER_H
+
+#pragma once
 
 #include <vulkan/vulkan.hpp>
 #include <Vkx/Device.h>

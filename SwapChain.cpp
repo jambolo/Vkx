@@ -7,19 +7,22 @@
 namespace Vkx
 {
 SwapChain::SwapChain(vk::SurfaceKHR const &             surface,
-                     uint32_t                           count,
                      vk::SurfaceFormatKHR const &       surfaceFormat,
                      vk::Extent2D                       extent,
                      uint32_t                           graphicsFamily,
                      uint32_t                           presentFamily,
-                     vk::SurfaceCapabilitiesKHR const & capabilities,
                      vk::PresentModeKHR                 presentMode,
                      std::shared_ptr<Device>            device)
     : device_(device)
 {
+    vk::SurfaceCapabilitiesKHR capabilities = device->physical()->getSurfaceCapabilitiesKHR(surface);
+    uint32_t nImages = capabilities.minImageCount + 1;
+    if (capabilities.maxImageCount > 0 && nImages > capabilities.maxImageCount)
+        nImages = capabilities.maxImageCount;
+
     vk::SwapchainCreateInfoKHR createInfo({},
                                           surface,
-                                          count,
+                                          nImages,
                                           surfaceFormat.format,
                                           surfaceFormat.colorSpace,
                                           extent,
@@ -48,11 +51,11 @@ SwapChain::SwapChain(vk::SurfaceKHR const &             surface,
 
     swapChain_ = device->createSwapchainKHR(createInfo);
 
-    images_ = device->getSwapchainImagesKHR(swapChain_);
+    std::vector<vk::Image> images = device->getSwapchainImagesKHR(swapChain_);
     format_ = surfaceFormat.format;
     extent_ = extent;
-    views_.reserve(images_.size());
-    for (auto const & image : images_)
+    views_.reserve(images.size());
+    for (auto const & image : images)
     {
         views_.push_back(
             device->createImageView(

@@ -1,6 +1,8 @@
 #if !defined(VKX_SWAPCHAIN_H)
 #define VKX_SWAPCHAIN_H
 
+#pragma once
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -16,12 +18,10 @@ public:
     static int constexpr MAX_LATENCY = 2;
 
     SwapChain(vk::SurfaceKHR const &             surface,
-              uint32_t                           count,
               vk::SurfaceFormatKHR const &       surfaceFormat,
               vk::Extent2D                       extent,
               uint32_t                           graphicsFamily,
               uint32_t                           presentFamily,
-              vk::SurfaceCapabilitiesKHR const & capabilities,
               vk::PresentModeKHR                 presentMode,
               std::shared_ptr<Device>            device);
 
@@ -34,7 +34,7 @@ public:
     vk::Extent2D const & extent() const { return extent_; }
 
     //! Returns the number of images.
-    size_t size() const { return images_.size(); }
+    size_t size() const { return views_.size(); }
 
     //! Returns the specified image view.
     vk::ImageView & view(size_t i) { return views_[i]; }
@@ -51,16 +51,12 @@ public:
     //! Returns the in-flight fence for the current frame.
     vk::Fence & inFlight() { return *inFlightFences_[currentFrame_]; }
 
-    //! Implicit conversion to the underlying vk::SwapchainKHR object
-    operator vk::SwapchainKHR() { return swapChain_; }
-
-    //! Implicit conversion to the underlying vk::SwapchainKHR object
+    //! Implicitly converts to the underlying vk::SwapchainKHR object
     operator vk::SwapchainKHR() { return swapChain_; }
 
 private:
     std::shared_ptr<Device> device_;
     vk::SwapchainKHR swapChain_;
-    std::vector<vk::Image> images_;
     vk::Format format_;
     std::vector<vk::ImageView> views_;
     vk::Extent2D extent_;
