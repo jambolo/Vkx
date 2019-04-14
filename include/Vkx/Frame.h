@@ -1,7 +1,7 @@
-#pragma once
-
 #if !defined(VKX_FRAME_H)
 #define VKX_FRAME_H
+
+#pragma once
 
 #include <glm/glm.hpp>
 
@@ -11,10 +11,9 @@ namespace Vkx
 class Frame
 {
 public:
-
     //! Constructor.
-    Frame()
-        : m_(1.0f)
+    Frame(glm::mat4x4 const & m = glm::mat4x4(1.0f))
+    : m_(m)
     {
     }
 
