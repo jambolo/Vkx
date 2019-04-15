@@ -189,20 +189,17 @@ void Frame::setTransformation(glm::mat4x4 const & m)
 
 glm::vec3 Frame::xAxis() const
 {
-    glm::vec4 axis = glm::normalize(m_[0]);
-    return { axis.x, axis.y, axis.z };
+    return glm::normalize(glm::vec3(m_[0]));
 }
 
 glm::vec3 Frame::yAxis() const
 {
-    glm::vec4 axis = glm::normalize(m_[1]);
-    return { axis.x, axis.y, axis.z };
+    return glm::normalize(glm::vec3(m_[1]));
 }
 
 glm::vec3 Frame::zAxis() const
 {
-    glm::vec4 axis = glm::normalize(m_[2]);
-    return { axis.x, axis.y, axis.z };
+    return glm::normalize(glm::vec3(m_[2]));
 }
 
 glm::mat4x4 Frame::compose(glm::vec3 const & t, glm::mat4x4 const & r, glm::vec3 const & s)

@@ -9,7 +9,7 @@
 
 namespace Vkx
 {
-//! @param	angleOfView		The angle between the bottom and top of the view frustum (in degrees).
+//! @param	angleOfView		The angle between the bottom and top of the view frustum (in radians).
 //! @param	nearDistance	The distance to the near clipping plane.
 //! @param	farDistance		The distance to the far clipping plane.
 //! @param	aspectRatio		View window w / h
@@ -22,115 +22,99 @@ Camera::Camera(float             angleOfView,
                float             aspectRatio,
                glm::vec3 const & position,
                glm::quat const & orientation /* = glm::quat()*/)
-    : angleOfView_(glm::radians(angleOfView))
+    : angleOfView_(angleOfView)
     , nearDistance_(nearDistance)
     , farDistance_(farDistance)
     , aspectRatio_(aspectRatio)
     , frame_(position, orientation)
     , viewOffset_(0.0f, 0.0f)
 {
-    syncInternalState();
+    updateView();
+    updateProjection();
+    updateViewProjection();
 }
 
-//! @param	angleOfView		The angle between the bottom and top of the view frustum  (in degrees).
+//! @param	angleOfView		The angle between the bottom and top of the view frustum  (in radians).
 //! @param	nearDistance	The distance to the near clipping plane.
 //! @param	farDistance		The distance to the far clipping plane.
 //! @param	aspectRatio		View window w / h
 //! @param	frame			The camera's frame of reference.
-
+//!
+//! @warning    The frame must not be scaled.
 Camera::Camera(float         angleOfView,
                float         nearDistance,
                float         farDistance,
                float         aspectRatio,
                Frame const & frame /* = Frame::Identity()*/)
-    : angleOfView_(glm::radians(angleOfView))
+    : angleOfView_(angleOfView)
     , nearDistance_(nearDistance)
     , farDistance_(farDistance)
     , aspectRatio_(aspectRatio)
     , frame_(frame)
     , viewOffset_(0.0f, 0.0f)
 {
-    syncInternalState();
+#if defined(_DEBUG)
+    // Make sure that there is no scaling
+    assert(glm::all(glm::epsilonEqual(frame.scale(), glm::vec3(1.0f), std::numeric_limits<float>::epsilon())));
+#endif  // defined( _DEBUG )
+
+    updateView();
+    updateProjection();
+    updateViewProjection();
 }
 
-#if 0
-void Camera::look() const
+//! @param    frame    New frame of reference
+//!
+//! @warning    The frame must not be scaled.
+
+void Camera::setFrame(Frame const & frame)
 {
-    HRESULT hr;
-
-    hr = pDevice_->SetTransform(D3DTS_VIEW, &viewMatrix_);
-    assert_succeeded(hr);
+#if defined(_DEBUG)
+    // Make sure that there is no scaling
+    assert(glm::all(glm::epsilonEqual(frame.scale(), glm::vec3(1.0f), std::numeric_limits<float>::epsilon())));
+#endif  // defined( _DEBUG )
+    frame_ = frame;
+    updateView();
+    updateViewProjection();
 }
-
-void Camera::reshape()
-{
-    HRESULT hr;
-
-    hr = pDevice_->SetTransform(D3DTS_PROJECTION, &projectionMatrix_);
-    assert_succeeded(hr);
-}
-#endif // if 0
 
 glm::vec3 Camera::position() const
 {
-#if defined(_DEBUG)
-    // Make sure that there is no scaling so we can simply extract the last row and avoid decomposition
-    assert(glm::all(glm::epsilonEqual(frame_.scale(), glm::vec3(1.0f), std::numeric_limits<float>::epsilon())));
-#endif  // defined( _DEBUG )
-
     glm::mat4x4 frame = frame_.transformation();
-    return glm::vec3(frame[3][0], frame[3][1], frame[3][2]);
+    return glm::vec3(frame[3]);
 }
 
 glm::quat Camera::orientation() const
 {
-#if defined(_DEBUG)
-    // Make sure that there is no scaling so we can simply extract the upper left 3x3 and avoid decomposition
-    assert(glm::all(glm::epsilonEqual(frame_.scale(), glm::vec3(1.0f), std::numeric_limits<float>::epsilon())));
-#endif  // defined( _DEBUG )
-
-    glm::mat4x4 frame = frame_.transformation();
-    glm::mat3x3 r(frame[0][0], frame[0][1], frame[0][2], frame[1][0], frame[1][1], frame[1][2], frame[2][0], frame[2][1],
-                  frame[2][2]);
+    glm::mat3x3 r(frame_.transformation());
     return glm::quat(r);
 }
 
 void Camera::lookAt(glm::vec3 const & to, glm::vec3 const & from, glm::vec3 const & up)
 {
-    frame_.setTransformation(glm::lookAtRH(from, to, up));
-    syncInternalState();
+    glm::vec3 z(glm::normalize(from - to)); // z is opposite of the direction of view
+    glm::vec3 x(glm::normalize(glm::cross(up, z)));
+    glm::vec3 y(glm::cross(z, x));
+
+    frame_ = glm::mat4x4(x.x, x.y, x.z, 0.0f,
+                         y.x, y.y, y.z, 0.0f,
+                         z.x, z.y, z.z, 0.0f,
+                         from.x, from.y, from.z, 1.0f);
+    updateView();
+    updateViewProjection();
 }
 
-//! @param	angle	Angle of rotation (in degrees)
+//! @param	angle	Angle of rotation (in radians)
 //! @param	axis	Axis of rotation
 
 void Camera::turn(float angle, glm::vec3 const & axis)
 {
-    turn(glm::angleAxis(glm::radians(angle), axis));
+    turn(glm::angleAxis(angle, axis));
 }
 
-void Camera::syncViewMatrix()
+void Camera::updateView()
 {
-// Yuck this is slow...there is a faster way
-//
-//	// Get the frame and invert it (because, in reality, the camera remains
-//	// at the origin and the world is transformed).
-//
-//	glm::mat4x4	r;
-//	D3DXMatrixInverse( r, NULL, frame_.GetTransformation() );
-
-    // Rotate and translate
-    //
-    // Note the transformation is inverted (because, in reality, the camera remains at the origin and world space
-    // is transformed). Also the inversion reverses the order of rotation and translation.
-
-    // Get the rotation and invert it (by transposing).
-
-#if defined(_DEBUG)
-    // Make sure that there is no scaling so we don't have to worry about inverting being different from transposing.
-    assert(glm::all(glm::epsilonEqual(frame_.scale(), glm::vec3(1.0f), std::numeric_limits<float>::epsilon())));
-#endif  // defined( _DEBUG )
-
+    // View matrix is just the inverse of the frame
     glm::mat4x4 frame = frame_.transformation();
     glm::mat3x3 r(frame);
     glm::vec3   t(frame[3]);
@@ -139,31 +123,25 @@ void Camera::syncViewMatrix()
     glm::mat4x4 it = glm::translate(glm::identity<glm::mat4x4>(), -t);
 
     // Compute the view matrix
-    viewMatrix_ = it * ir;
+    view_ = ir * it;
 }
 
-void Camera::syncProjectionMatrix()
+void Camera::updateProjection()
 {
-    projectionMatrix_ = glm::perspectiveRH(angleOfView_, aspectRatio_, nearDistance_, farDistance_);
+    projection_ = glm::perspective(angleOfView_, aspectRatio_, nearDistance_, farDistance_);
+    // "GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted. The easiest way to
+    // compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix. If you don't do
+    // this, then the image will be rendered upside down."
+    projection_[1][1] *= -1;   // This has got to go
 }
 
-//!
-//! @note	This function should be called whenever any value is modified directly.
-
-void Camera::syncInternalState()
+void Camera::updateViewProjection()
 {
-    // Sync the view matrix
-    syncViewMatrix();
-
-    // Sync the projection matrix
-    syncProjectionMatrix();
-
     // Compute the view-projection matrix
-    viewProjectionMatrix_ = viewMatrix_ * projectionMatrix_;
+    viewProjection_ = view_ * projection_;
 
     // Compute the view frustum
-
-    computeViewFrustum(viewProjectionMatrix_);
+    computeViewFrustum(viewProjection_);
 }
 
 void Camera::computeViewFrustum(glm::mat4x4 const & m)
