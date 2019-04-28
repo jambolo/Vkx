@@ -54,17 +54,22 @@ public:
     //! @param  instance        Instance providing the physical device
     //! @param  chooser         Chooses which vk::PhysicalDevice this object wraps
     PhysicalDevice(std::shared_ptr<Instance> &                                                instance,
+                   vk::SurfaceKHR                                                             surface,
                    std::function<vk::PhysicalDevice(std::vector<vk::PhysicalDevice> const &)> chooser);
 
     PhysicalDevice(PhysicalDevice && src);
 
     PhysicalDevice & operator =(PhysicalDevice && rhs);
 
-    //! Returns the instance this physical device is associated with.
+    //! Returns the instance associated with this physical device.
     std::shared_ptr<Instance> instance() const { return instance_; }
+
+    //! Returns the surface associated with this physical device.
+    vk::SurfaceKHR surface() const { return surface_; }
 
 private:
     std::shared_ptr<Instance> instance_;
+    vk::SurfaceKHR surface_;
 };
 } // namespace Vkx
 

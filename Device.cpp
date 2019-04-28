@@ -40,15 +40,18 @@ Device & Device::operator =(Device && rhs)
 }
 
 PhysicalDevice::PhysicalDevice(std::shared_ptr<Instance> &                                                instance,
+                               vk::SurfaceKHR                                                             surface,
                                std::function<vk::PhysicalDevice(std::vector<vk::PhysicalDevice> const &)> chooser)
     : vk::PhysicalDevice(chooser(instance->enumeratePhysicalDevices()))
     , instance_(instance)
+    , surface_(surface)
 {
 }
 
 PhysicalDevice::PhysicalDevice(PhysicalDevice && src)
     : vk::PhysicalDevice(src)
     , instance_(std::move(src.instance_))
+    , surface_(src.surface_)
 {
     static_cast<vk::PhysicalDevice &>(src) = nullptr;
 }
@@ -60,6 +63,7 @@ PhysicalDevice & PhysicalDevice::operator =(PhysicalDevice && rhs)
         vk::PhysicalDevice::operator =(rhs);
         static_cast<vk::PhysicalDevice &>(rhs) = nullptr;
         instance_ = std::move(rhs.instance_);
+        surface_  = rhs.surface_;
     }
     return *this;
 }
