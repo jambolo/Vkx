@@ -15,17 +15,19 @@ class Device;
 class SwapChain
 {
 public:
-    static int constexpr MAX_LATENCY = 2;
+    static int constexpr MAX_LATENCY = 3;
 
-    SwapChain(vk::SurfaceKHR const &             surface,
-              vk::SurfaceFormatKHR const &       surfaceFormat,
-              vk::Extent2D                       extent,
-              uint32_t                           graphicsFamily,
-              uint32_t                           presentFamily,
-              vk::PresentModeKHR                 presentMode,
-              std::shared_ptr<Device>            device);
+    SwapChain(std::shared_ptr<Device>      device,
+              vk::SurfaceFormatKHR const & surfaceFormat,
+              vk::Extent2D                 extent,
+              uint32_t                     graphicsFamily,
+              uint32_t                     presentFamily,
+              vk::PresentModeKHR           presentMode);
 
     ~SwapChain();
+
+    //! Advances to the next swap chain image.
+    uint32_t swap();
 
     //! Returns the image format.
     vk::Format format() const { return format_; }
@@ -38,9 +40,6 @@ public:
 
     //! Returns the specified image view.
     vk::ImageView & view(size_t i) { return views_[i]; }
-
-    //! Advances to the next swap chain image.
-    uint32_t swap();
 
     //! Returns the image-available semaphore for the current frame.
     vk::Semaphore & imageAvailable() { return *imageAvailableSemaphores_[currentFrame_]; }

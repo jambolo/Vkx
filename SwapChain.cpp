@@ -3,19 +3,21 @@
 #include "Device.h"
 
 #include <memory>
+#include <vulkan/vulkan.hpp>
 
 namespace Vkx
 {
-SwapChain::SwapChain(vk::SurfaceKHR const &             surface,
-                     vk::SurfaceFormatKHR const &       surfaceFormat,
-                     vk::Extent2D                       extent,
-                     uint32_t                           graphicsFamily,
-                     uint32_t                           presentFamily,
-                     vk::PresentModeKHR                 presentMode,
-                     std::shared_ptr<Device>            device)
+SwapChain::SwapChain(std::shared_ptr<Device>      device,
+                     vk::SurfaceFormatKHR const & surfaceFormat,
+                     vk::Extent2D                 extent,
+                     uint32_t                     graphicsFamily,
+                     uint32_t                     presentFamily,
+                     vk::PresentModeKHR           presentMode)
     : device_(device)
 {
-    vk::SurfaceCapabilitiesKHR capabilities = device->physical()->getSurfaceCapabilitiesKHR(surface);
+    std::shared_ptr<PhysicalDevice> physicalDevice = device->physical();
+    vk::SurfaceKHR surface = physicalDevice->surface();
+    vk::SurfaceCapabilitiesKHR capabilities = physicalDevice->getSurfaceCapabilitiesKHR(surface);
     uint32_t nImages = capabilities.minImageCount + 1;
     if (capabilities.maxImageCount > 0 && nImages > capabilities.maxImageCount)
         nImages = capabilities.maxImageCount;
