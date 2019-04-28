@@ -12,14 +12,8 @@ class Frame
 {
 public:
     //! Constructor.
-    constexpr Frame()
-    : m_(glm::mat4x4(1.0f))
-    {
-    }
-
-    //! Constructor.
-    Frame(glm::mat4x4 const & m)
-    : m_(m)
+    Frame(glm::mat4x4 const & m = glm::mat4x4(1.0f))
+        : m_(m)
     {
     }
 
@@ -77,7 +71,7 @@ public:
     glm::vec3 zAxis() const;
 
     //! Returns an untransformed Frame.
-    static Frame constexpr identity() { return Frame(); }
+    static Frame identity() { return Frame(); }
 
 private:
 
