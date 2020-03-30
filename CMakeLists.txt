@@ -55,7 +55,7 @@ source_group(Sources FILES ${SOURCES})
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PUBLIC
 	Vulkan::Vulkan
-	glm
+	glm::glm
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${PUBLIC_INCLUDE_PATHS} PRIVATE ${PRIVATE_INCLUDE_PATHS})
 target_compile_definitions(${PROJECT_NAME}
