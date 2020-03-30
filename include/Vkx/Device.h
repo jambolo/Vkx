@@ -8,6 +8,9 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
+//! @defgroup Devices Device Types
+//! Extensions to vk::Device and vk::PhysicalDevice that support RAII and encapsulate associations and ownership.
+
 namespace Vkx
 {
 class Instance;
@@ -15,6 +18,7 @@ class PhysicalDevice;
 
 //! A destructible extension to vk::Device.
 //!
+//! @ingroup Devices
 //! @note   A Device can be moved, but cannot be copied.
 
 class Device : public vk::Device
@@ -44,6 +48,7 @@ private:
 
 //! A destructible extension to vk::PhysicalDevice.
 //!
+//! @ingroup Devices
 //! @note   A PhysicalDevice can be moved, but cannot be copied.
 class PhysicalDevice : public vk::PhysicalDevice
 {

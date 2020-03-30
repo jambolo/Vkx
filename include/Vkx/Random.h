@@ -7,9 +7,14 @@
 #include <glm/gtc/constants.hpp>
 #include <random>
 
+//! @defgroup Random Random Number Generator Types
+//! Miscellaneous types that can generate randomized mathematical entities.
+
 namespace Vkx
 {
 //! A LCG pseudo-random number generator that generates directions.
+//!
+//! @ingroup Random
 
 class RandomDirection
 {
@@ -27,6 +32,8 @@ private:
 };
 
 //! A LCG pseudo-random number generator that generates orientations.
+//!
+//! @ingroup Random
 
 class RandomOrientation
 {

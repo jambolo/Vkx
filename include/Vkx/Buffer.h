@@ -7,12 +7,17 @@
 #include <Vkx/Device.h>
 #include <Vkx/Vkx.h>
 
+//! @defgroup Buffers Memory Buffer Types
+//! Extensions to vk::Buffer that support ownership of the memory.
+
 namespace Vkx
 {
 //! An extension of vk::Buffer that supports ownership of the memory.
 //!
 //! The buffer and its memory allocation (if any) are destroyed automatically when this object is destroyed.
+//! This class can be used as a base class.
 //!
+//! @ingroup Buffers
 //! @note   Instances can be moved, but cannot be copied.
 
 class Buffer
@@ -55,6 +60,9 @@ private:
 };
 
 //! A Buffer that is visible to the CPU and is automatically kept in sync (eHostVisible | eHostCoherent).
+//!
+//! @ingroup Buffers
+
 class HostBuffer : public Buffer
 {
 public:
@@ -73,6 +81,9 @@ public:
 };
 
 //! A Buffer that is visible only to the GPU (eDeviceLocal).
+//!
+//! @ingroup Buffers
+
 class LocalBuffer : public Buffer
 {
 public:

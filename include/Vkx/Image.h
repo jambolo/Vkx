@@ -7,6 +7,9 @@
 #include <Vkx/Device.h>
 #include <Vkx/Vkx.h>
 
+//! @defgroup Images Image Types
+//! Extensions to vk::Image that support ownership of the memory and the view.
+
 namespace Vkx
 {
 //! An extension to vk::Image that supports ownership of the memory and the view.
