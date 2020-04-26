@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10)
-project(Vkx VERSION 0.1.0 LANGUAGES CXX)
+project(Vkx VERSION 0.1.0 LANGUAGES CXX DESCRIPTION "Vulkan C++ extensions")
 
 # Never build a DLL
 #option(BUILD_SHARED_LIBS "Build libraries as DLLs" FALSE)
@@ -8,7 +8,7 @@ project(Vkx VERSION 0.1.0 LANGUAGES CXX)
 # Build                                                                 #
 #########################################################################
 
-if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	find_package(Vulkan REQUIRED)
 	find_package(glm REQUIRED)
 endif()
@@ -20,7 +20,7 @@ set(PUBLIC_INCLUDE_PATHS
 
 set(PRIVATE_INCLUDE_PATHS
     .
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/Vkx
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}
 )
 
 set(SOURCES
@@ -52,7 +52,11 @@ set(SOURCES
 )
 source_group(Sources FILES ${SOURCES})
 
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
+if(NOT CMAKE_DEBUG_POSTFIX)
+  set(CMAKE_DEBUG_POSTFIX d)
+endif()
+
+add_library(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PUBLIC
 	Vulkan::Vulkan
 	glm::glm
@@ -94,7 +98,7 @@ endif()
 # Testing                                                               #
 #########################################################################
 
-if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
     message(STATUS "Testing is enabled. Turn on BUILD_TESTING to build tests.")
     if(BUILD_TESTING)
