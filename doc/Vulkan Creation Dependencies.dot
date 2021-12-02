@@ -1,0 +1,30 @@
+digraph G {
+    rankdir=BT
+    commandBuffers_ -> { device_; commandPools_; swapChain_; renderPass_; pipelineLayout_; graphicsPipeline_; framebuffers_; vertexBuffer_; indexBuffer_; framebuffers_; descriptorSets_ }
+    commandPools_ -> { device_ }
+    depthImage_ -> { device_; graphicsQueue_; swapChain_; commandPools_ }
+    descriptorSetLayout_ -> device_;
+    device_ -> { physicalDevice_; }
+    descriptorPool_ -> { device_; swapChain_ }
+    descriptorSetLayout_ -> device_;
+    descriptorSets_ -> { device_; descriptorPool_; swapChain_; descriptorSetLayout_; textureImage_; textureSampler_; uniformBuffers_ }
+    dynamicLoader_ -> instance_;
+    framebuffers_ -> { device_; swapChain_; renderPass_; resolveImage_; depthImage_ }
+    graphicsPipeline_ -> { device_; swapChain_; renderPass_; pipelineLayout_ }
+    graphicsQueue_ -> { device_ }
+    indexBuffer_ -> { device_; graphicsQueue_; commandPools_; }
+    instance_ -> glfwx [label="required extensions"];
+    messenger_ -> { instance_; dynamicLoader_ }
+    physicalDevice_ -> { instance_; surface_ }
+    pipelineLayout_ -> { device_; descriptorSetLayout_ }
+    presentQueue_ -> { device_; swapChain_ }
+    renderPass_ -> { device_; swapChain_; depthImage_ }
+    resolveImage_ -> { device_; graphicsQueue_; swapChain_; commandPools_ }
+    surface_ -> { window_; instance_ }
+    swapChain_ -> { device_; window_; }
+    textureImage_ -> { device_; graphicsQueue_; commandPools_ }
+    textureSampler_ -> { device_; textureImage_ }
+    uniformBuffers_ -> { device_; swapChain_ }
+    vertexBuffer_ -> { device_; graphicsQueue_; commandPools_; }
+    window_ -> glfwx;
+}
