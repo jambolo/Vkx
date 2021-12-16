@@ -33,25 +33,25 @@ public:
            vk::MemoryPropertyFlags memoryProperties,
            vk::SharingMode         sharingMode = vk::SharingMode::eExclusive);
 
-    //! Move constructor
+    //! Move constructor.
     Buffer(Buffer && src);
 
     //! Destructor.
-    virtual ~Buffer();
+    virtual ~Buffer() = default;
 
-    //! Move-assignment operator
+    //! Move-assignment operator.
     Buffer & operator =(Buffer && rhs);
 
     //! Implicitly converts into a vk::Buffer.
-    operator vk::Buffer() const { return buffer_; }
+    operator vk::Buffer() const { return *buffer_; }
 
     //! Returns the DeviceMemory handle.
-    vk::DeviceMemory allocation() const { return allocation_; }
+    vk::DeviceMemory allocation() const { return *allocation_; }
 
 protected:
     std::shared_ptr<Device> device_;    //!< Device associated with this buffer
-    vk::DeviceMemory allocation_;       //!< %Buffer allocation
-    vk::Buffer buffer_;                 //!< Vulkan buffer
+    vk::UniqueDeviceMemory allocation_; //!< %Buffer allocation
+    vk::UniqueBuffer buffer_;           //!< Vulkan buffer
 
 private:
     // Non-copyable

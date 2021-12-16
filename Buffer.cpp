@@ -25,46 +25,33 @@ Buffer::Buffer(std::shared_ptr<Device> device,
                vk::SharingMode         sharingMode /*= vk::SharingMode::eExclusive*/)
     : device_(device)
 {
-    buffer_ = device_->createBuffer(vk::BufferCreateInfo({}, size, usage, sharingMode));
+    buffer_ = device_->createBufferUnique(vk::BufferCreateInfo({}, size, usage, sharingMode));
 
-    vk::MemoryRequirements requirements = device_->getBufferMemoryRequirements(buffer_);
+    vk::MemoryRequirements requirements = device_->getBufferMemoryRequirements(*buffer_);
     uint32_t memoryType = Vkx::findAppropriateMemoryType(device_->physical(),
                                                          requirements.memoryTypeBits,
                                                          memoryProperties);
 
-    allocation_ = device_->allocateMemory(vk::MemoryAllocateInfo(requirements.size, memoryType));
-    device_->bindBufferMemory(buffer_, allocation_, 0);
+    allocation_ = device_->allocateMemoryUnique(vk::MemoryAllocateInfo(requirements.size, memoryType));
+    device_->bindBufferMemory(*buffer_, *allocation_, 0);
 }
 
 //! @param  src     Move source
 Buffer::Buffer(Buffer && src)
     : device_(std::move(src.device_))
-    , allocation_(src.allocation_)
-    , buffer_(src.buffer_)
+    , allocation_(std::move(src.allocation_))
+    , buffer_(std::move(src.buffer_))
 {
-    src.allocation_ = nullptr;
-    src.buffer_ = nullptr;
 }
 
-Buffer::~Buffer()
-{
-    if (device_)
-    {
-        device_->destroy(buffer_);
-        device_->free(allocation_);
-    }
-}
-vk::UniqueBuffer x;
 //! @param  rhs     Move source
 Buffer & Buffer::operator =(Buffer && rhs)
 {
     if (this != &rhs)
     {
         device_     = std::move(rhs.device_);
-        allocation_ = rhs.allocation_;
-        buffer_     = rhs.buffer_;
-        rhs.allocation_ = nullptr;
-        rhs.buffer_ = nullptr;
+        allocation_ = std::move(rhs.allocation_);
+        buffer_     = std::move(rhs.buffer_);
     }
     return *this;
 }
@@ -160,7 +147,7 @@ void LocalBuffer::copySynched(vk::CommandPool const & commandPool,
                               size_t                  size)
 {
     executeOnceSynched(device_, commandPool, queue, [&src, this, size] (vk::CommandBuffer commands) {
-                           commands.copyBuffer(src, this->buffer_, vk::BufferCopy(0, 0, size));
+                           commands.copyBuffer(src, *this->buffer_, vk::BufferCopy(0, 0, size));
                        });
 }
 } // namespace Vkx

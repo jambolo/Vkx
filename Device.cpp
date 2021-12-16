@@ -32,9 +32,12 @@ Device & Device::operator =(Device && rhs)
 {
     if (this != &rhs)
     {
+        vk::Device::destroy();
+        
         vk::Device::operator =(rhs);
-        static_cast<vk::Device &>(rhs) = nullptr;
         physicalDevice_ = std::move(rhs.physicalDevice_);
+        
+        static_cast<vk::Device &>(rhs) = nullptr;
     }
     return *this;
 }
@@ -51,7 +54,7 @@ PhysicalDevice::PhysicalDevice(std::shared_ptr<Instance> &                      
 PhysicalDevice::PhysicalDevice(PhysicalDevice && src)
     : vk::PhysicalDevice(src)
     , instance_(std::move(src.instance_))
-    , surface_(src.surface_)
+    , surface_(std::move(src.surface_))
 {
     static_cast<vk::PhysicalDevice &>(src) = nullptr;
 }
@@ -61,10 +64,11 @@ PhysicalDevice & PhysicalDevice::operator =(PhysicalDevice && rhs)
     if (&rhs != this)
     {
         vk::PhysicalDevice::operator =(rhs);
-        static_cast<vk::PhysicalDevice &>(rhs) = nullptr;
         instance_ = std::move(rhs.instance_);
-        surface_  = rhs.surface_;
-    }
+        surface_  = std::move(rhs.surface_);
+ 
+        static_cast<vk::PhysicalDevice &>(rhs) = nullptr;
+}
     return *this;
 }
 } // namespace Vkx

@@ -31,19 +31,19 @@ public:
     Image(Image && src);
 
     //! Destructor.
-    virtual ~Image();
+    virtual ~Image() = default;
 
     //! Move-assignment operator
     Image & operator =(Image && rhs);
 
     //! Implicitly converts into a vk::Image.
-    operator vk::Image() const { return image_; }
+    operator vk::Image() const { return *image_; }
 
     //! Returns the DeviceMemory handle.
-    vk::DeviceMemory allocation() const { return allocation_; }
+    vk::DeviceMemory allocation() const { return *allocation_; }
 
     //! Returns the view
-    vk::ImageView view() const { return view_; }
+    vk::ImageView view() const { return *view_; }
 
     //! Returns the creation info.
     vk::ImageCreateInfo info() const { return info_; }
@@ -54,9 +54,9 @@ public:
 protected:
     std::shared_ptr<Device> device_;    //!< Device associated with this image
     vk::ImageCreateInfo info_;          //!< Info about the image
-    vk::DeviceMemory allocation_;       //!< The image data
-    vk::Image image_;                   //!< The image
-    vk::ImageView view_;                //!< The image view
+    vk::UniqueDeviceMemory allocation_; //!< The image data
+    vk::UniqueImage image_;             //!< The image
+    vk::UniqueImageView view_;          //!< The image view
 
 private:
     // Non-copyable

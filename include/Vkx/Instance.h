@@ -22,7 +22,7 @@ public:
 
     ~Instance();
 
-    //! Move-assignment operator
+    //! Move-assignment operator.
     Instance & operator =(Instance && rhs);
 
 private:

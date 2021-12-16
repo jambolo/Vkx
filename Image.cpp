@@ -27,17 +27,17 @@ Image::Image(std::shared_ptr<Device>     device,
     : device_(device)
     , info_(info)
 {
-    image_ = device->createImage(info_);
+    image_ = device->createImageUnique(info_);
 
-    vk::MemoryRequirements requirements = device->getImageMemoryRequirements(image_);
+    vk::MemoryRequirements requirements = device->getImageMemoryRequirements(*image_);
     uint32_t memoryType = findAppropriateMemoryType(device->physical(), requirements.memoryTypeBits, memoryProperties);
 
-    allocation_ = device->allocateMemory(vk::MemoryAllocateInfo(requirements.size, memoryType));
-    device->bindImageMemory(image_, allocation_, 0);
+    allocation_ = device->allocateMemoryUnique(vk::MemoryAllocateInfo(requirements.size, memoryType));
+    device->bindImageMemory(*image_, *allocation_, 0);
 
-    view_ = device->createImageView(
+    view_ = device->createImageViewUnique(
         vk::ImageViewCreateInfo({},
-                                image_,
+                                *image_,
                                 vk::ImageViewType::e2D,
                                 info_.format,
                                 vk::ComponentMapping(),
@@ -48,24 +48,24 @@ Image::Image(std::shared_ptr<Device>     device,
 Image::Image(Image && src)
     : device_(std::move(src.device_))
     , info_(src.info_)
-    , allocation_(src.allocation_)
-    , image_(src.image_)
-    , view_(src.view_)
+    , allocation_(std::move(src.allocation_))
+    , image_(std::move(src.image_))
+    , view_(std::move(src.view_))
 {
-//    src.info_ = vk::ImageCreateInfo(); c not necessary
-    src.allocation_ = nullptr;
-    src.image_      = nullptr;
-    src.view_       = nullptr;
 }
 
-Image::~Image()
+//! @param  rhs     Move source
+Image & Image::operator =(Image && rhs)
 {
-    if (device_)
+    if (this != &rhs)
     {
-        device_->destroy(view_);
-        device_->destroy(image_);
-        device_->free(allocation_);
+        device_         = std::move(rhs.device_);
+        info_           = rhs.info_;
+        allocation_     = std::move(rhs.allocation_);
+        image_          = std::move(rhs.image_);
+        view_           = std::move(rhs.view_);
     }
+    return *this;
 }
 
 //! This function returns the number of mip levels needed to reach a 1x1 texture, assuming that the values are integers and the
@@ -78,24 +78,6 @@ Image::~Image()
 uint32_t Image::computeMaxMipLevels(uint32_t width, uint32_t height)
 {
     return static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
-}
-
-//! @param  rhs     Move source
-Image & Image::operator =(Image && rhs)
-{
-    if (this != &rhs)
-    {
-        device_         = std::move(rhs.device_);
-        info_           = rhs.info_;
-        //rhs.info_       = vk::ImageCreateInfo(); not necessary
-        allocation_     = rhs.allocation_;
-        rhs.allocation_ = nullptr;
-        image_          = rhs.image_;
-        rhs.image_      = nullptr;
-        view_           = rhs.view_;
-        rhs.view_       = nullptr;
-    }
-    return *this;
 }
 
 //! @param  device              Logical device associated with the image
@@ -209,7 +191,7 @@ void LocalImage::copy(vk::CommandPool const & commandPool,
                                                       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
                                                       { 0, 0, 0 },
                                                       { info_.extent.width, info_.extent.height, 1 });
-                           commands.copyBufferToImage(buffer, image_, vk::ImageLayout::eTransferDstOptimal, region);
+                           commands.copyBufferToImage(buffer, *image_, vk::ImageLayout::eTransferDstOptimal, region);
                        });
 }
 
@@ -273,7 +255,7 @@ void LocalImage::transitionLayout(vk::CommandPool const & commandPool,
                                    newLayout,
                                    VK_QUEUE_FAMILY_IGNORED,
                                    VK_QUEUE_FAMILY_IGNORED,
-                                   image_,
+                                   *image_,
                                    vk::ImageSubresourceRange(aspectMask, 0, info_.mipLevels, 0, 1));
 
     executeOnceSynched(device_,
@@ -303,7 +285,7 @@ void LocalImage::generateMipmaps(vk::CommandPool const & commandPool,
                                                           vk::ImageLayout::eUndefined,
                                                           VK_QUEUE_FAMILY_IGNORED,
                                                           VK_QUEUE_FAMILY_IGNORED,
-                                                          image_,
+                                                          *image_,
                                                           vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
 
                            int32_t mipWidth  = info_.extent.width;
@@ -334,9 +316,9 @@ void LocalImage::generateMipmaps(vk::CommandPool const & commandPool,
                                                         barrier);
 
                                // Blit the previous mip level to the current mip level
-                               commands.blitImage(image_,
+                               commands.blitImage(*image_,
                                                   vk::ImageLayout::eTransferSrcOptimal,
-                                                  image_,
+                                                  *image_,
                                                   vk::ImageLayout::eTransferDstOptimal,
                                                   vk::ImageBlit(
                                                       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, i - 1, 0, 1),

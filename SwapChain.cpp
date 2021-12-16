@@ -51,16 +51,16 @@ SwapChain::SwapChain(std::shared_ptr<Device>      device,
     createInfo.presentMode  = presentMode;
     createInfo.clipped      = VK_TRUE;
 
-    swapChain_ = device->createSwapchainKHR(createInfo);
+    swapChain_ = device->createSwapchainKHRUnique(createInfo);
 
-    std::vector<vk::Image> images = device->getSwapchainImagesKHR(swapChain_);
+    std::vector<vk::Image> images = device->getSwapchainImagesKHR(*swapChain_);
     format_ = surfaceFormat.format;
     extent_ = extent;
     views_.reserve(images.size());
     for (auto const & image : images)
     {
         views_.push_back(
-            device->createImageView(
+            device->createImageViewUnique(
                 vk::ImageViewCreateInfo({},
                                         image,
                                         vk::ImageViewType::e2D,
@@ -81,22 +81,51 @@ SwapChain::SwapChain(std::shared_ptr<Device>      device,
     }
 }
 
-SwapChain::~SwapChain()
+//! @param  src     Move source
+SwapChain::SwapChain(SwapChain && src)
+    : device_(std::move(src.device_))
+    , swapChain_(std::move(src.swapChain_))
+    , format_(src.format_)
+    , views_(std::move(src.views_))
+    , extent_(src.extent_)
+    , imageAvailableSemaphores_(std::move(src.imageAvailableSemaphores_))
+    , renderFinishedSemaphores_(std::move(src.renderFinishedSemaphores_))
+    , inFlightFences_(std::move(src.inFlightFences_))
+    , currentFrame_(src.currentFrame_)
 {
-    for (auto const & view : views_)
-    {
-        device_->destroy(view);
-    }
-    device_->destroy(swapChain_);
 }
+
+//! @param  src     Move source
+Vkx::SwapChain & SwapChain::operator =(SwapChain && rhs)
+{
+    if (this != &rhs)
+    {
+        device_ = std::move(rhs.device_);
+        swapChain_ = std::move(rhs.swapChain_);
+        format_ = std::move(rhs.format_);
+        views_ = std::move(rhs.views_);
+        extent_ = std::move(rhs.extent_);
+        imageAvailableSemaphores_ = std::move(rhs.imageAvailableSemaphores_);
+        renderFinishedSemaphores_ = std::move(rhs.renderFinishedSemaphores_);
+        inFlightFences_ = std::move(rhs.inFlightFences_);
+        currentFrame_ = std::move(rhs.currentFrame_);
+    }
+    return *this;
+}
+
+//! @warning    A std::runtime_error is thrown if the swap fails.
+//!
 
 uint32_t SwapChain::swap()
 {
+    if (!swapChain_)
+        throw std::runtime_error("SwapChain::swap: invalidated swap chain!");
+    
     currentFrame_ = (currentFrame_ + 1) % MAX_LATENCY;
     device_->waitForFences(1, &(*inFlightFences_[currentFrame_]), VK_TRUE, std::numeric_limits<uint64_t>::max());
     device_->resetFences(1, &(*inFlightFences_[currentFrame_]));
 
-    vk::ResultValue<uint32_t> result = device_->acquireNextImageKHR(swapChain_,
+    vk::ResultValue<uint32_t> result = device_->acquireNextImageKHR(*swapChain_,
                                                                     std::numeric_limits<uint64_t>::max(),
                                                                     *imageAvailableSemaphores_[currentFrame_],
                                                                     nullptr);

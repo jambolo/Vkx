@@ -12,11 +12,16 @@ namespace Vkx
 {
 class Device;
 
+//! An object that encapsulates a vk:SwapchainKHR and the objects controlled by it.
+//!
+//! @note   A SwapChain cannot be copied or assigned, but can be moved
+
 class SwapChain
 {
 public:
-    static int constexpr MAX_LATENCY = 3;
+    static int constexpr MAX_LATENCY = 3;   //!< The number of frames in the swap chain
 
+    //! Constructor
     SwapChain(std::shared_ptr<Device>      device,
               vk::SurfaceFormatKHR const & surfaceFormat,
               vk::Extent2D                 extent,
@@ -24,7 +29,11 @@ public:
               uint32_t                     presentFamily,
               vk::PresentModeKHR           presentMode);
 
-    ~SwapChain();
+    //! Move constructor.
+    SwapChain(SwapChain && src);
+
+    //! Move-assignment operator
+    SwapChain & operator =(SwapChain && rhs);
 
     //! Advances to the next swap chain image.
     uint32_t swap();
@@ -39,7 +48,7 @@ public:
     size_t size() const { return views_.size(); }
 
     //! Returns the specified image view.
-    vk::ImageView & view(size_t i) { return views_[i]; }
+    vk::ImageView & view(size_t i) { return *views_[i]; }
 
     //! Returns the image-available semaphore for the current frame.
     vk::Semaphore & imageAvailable() { return *imageAvailableSemaphores_[currentFrame_]; }
@@ -51,13 +60,17 @@ public:
     vk::Fence & inFlight() { return *inFlightFences_[currentFrame_]; }
 
     //! Implicitly converts to the underlying vk::SwapchainKHR object
-    operator vk::SwapchainKHR() { return swapChain_; }
+    operator vk::SwapchainKHR() { return *swapChain_; }
 
 private:
+    // Non-copyable
+    SwapChain(SwapChain const &) = delete;
+    SwapChain & operator =(SwapChain const &) = delete;
+
     std::shared_ptr<Device> device_;
-    vk::SwapchainKHR swapChain_;
+    vk::UniqueSwapchainKHR swapChain_;
     vk::Format format_;
-    std::vector<vk::ImageView> views_;
+    std::vector<vk::UniqueImageView> views_;
     vk::Extent2D extent_;
     std::vector<vk::UniqueSemaphore> imageAvailableSemaphores_;
     std::vector<vk::UniqueSemaphore> renderFinishedSemaphores_;

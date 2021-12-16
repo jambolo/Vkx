@@ -19,7 +19,7 @@ class PhysicalDevice;
 //! A destructible extension to vk::Device.
 //!
 //! @ingroup Devices
-//! @note   A Device can be moved, but cannot be copied.
+//! @note   A Device can be moved, but cannot be copied or assigned.
 
 class Device : public vk::Device
 {
@@ -30,9 +30,10 @@ public:
     //! Move constructor.
     Device(Device && src);
 
+    //! Destuctor
     ~Device();
 
-    //! Move-assignment operator
+    //! Move-assignment operator.
     Device & operator =(Device && rhs);
 
     //! Returns the physical device this device is associated with.
@@ -62,19 +63,25 @@ public:
                    vk::SurfaceKHR                                                             surface,
                    std::function<vk::PhysicalDevice(std::vector<vk::PhysicalDevice> const &)> chooser);
 
+    //! Move constructor.
     PhysicalDevice(PhysicalDevice && src);
 
+    //! Move assignment operator.
     PhysicalDevice & operator =(PhysicalDevice && rhs);
 
     //! Returns the instance associated with this physical device.
     std::shared_ptr<Instance> instance() const { return instance_; }
 
     //! Returns the surface associated with this physical device.
-    vk::SurfaceKHR surface() const { return surface_; }
+    vk::SurfaceKHR surface() const { return *surface_; }
 
 private:
+    // non-copyable
+    PhysicalDevice(PhysicalDevice & src) = delete;
+    PhysicalDevice & operator =(PhysicalDevice & rhs) = delete;
+
     std::shared_ptr<Instance> instance_;
-    vk::SurfaceKHR surface_;
+    vk::UniqueSurfaceKHR surface_;
 };
 } // namespace Vkx
 

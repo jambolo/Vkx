@@ -13,6 +13,7 @@ Instance::Instance(vk::InstanceCreateInfo const & info)
 Instance::Instance(Instance && src)
     : vk::Instance(src)
 {
+    static_cast<vk::Instance &>(src) = nullptr;
 }
 
 Instance::~Instance()
@@ -22,7 +23,14 @@ Instance::~Instance()
 
 Vkx::Instance & Instance::operator =(Instance && rhs)
 {
-    vk::Instance::operator =(rhs);
+    if (this != &rhs)
+    {
+        vk::Instance::destroy();
+        
+        vk::Instance::operator =(rhs);
+        
+        static_cast<vk::Instance &>(rhs) = nullptr;
+    }
     return *this;
 }
 } // namespace Vkx
